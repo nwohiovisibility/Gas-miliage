@@ -1,48 +1,69 @@
 import type { FillUp } from './types'
+import { supabase } from './supabaseClient'
 
-const STORAGE_KEY = 'gas-tracker.fillups.v1'
+const TABLE = 'fill_ups'
 
-function read(): FillUp[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
+interface FillUpRow {
+  id: string
+  date: string
+  odometer: number
+  gallons: number
+  total_cost: number
+  notes: string | null
+}
+
+function fromRow(row: FillUpRow): FillUp {
+  return {
+    id: row.id,
+    date: row.date,
+    odometer: row.odometer,
+    gallons: row.gallons,
+    totalCost: row.total_cost,
+    notes: row.notes ?? undefined
   }
 }
 
-function write(fillUps: FillUp[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(fillUps))
+export async function getAllFillUps(): Promise<FillUp[]> {
+  const { data, error } = await supabase.from(TABLE).select('*').order('odometer', { ascending: true })
+  if (error) throw error
+  return (data as FillUpRow[]).map(fromRow)
 }
 
-export function getAllFillUps(): FillUp[] {
-  return read().sort((a, b) => a.odometer - b.odometer)
+export async function addFillUp(fillUp: Omit<FillUp, 'id'>): Promise<FillUp> {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .insert({
+      date: fillUp.date,
+      odometer: fillUp.odometer,
+      gallons: fillUp.gallons,
+      total_cost: fillUp.totalCost,
+      notes: fillUp.notes ?? null
+    })
+    .select()
+    .single()
+  if (error) throw error
+  return fromRow(data as FillUpRow)
 }
 
-export function addFillUp(fillUp: Omit<FillUp, 'id'>): FillUp {
-  const record: FillUp = { ...fillUp, id: crypto.randomUUID() }
-  const all = read()
-  all.push(record)
-  write(all)
-  return record
+export async function updateFillUp(id: string, updates: Partial<Omit<FillUp, 'id'>>): Promise<void> {
+  const patch: Partial<FillUpRow> = {}
+  if (updates.date !== undefined) patch.date = updates.date
+  if (updates.odometer !== undefined) patch.odometer = updates.odometer
+  if (updates.gallons !== undefined) patch.gallons = updates.gallons
+  if (updates.totalCost !== undefined) patch.total_cost = updates.totalCost
+  if (updates.notes !== undefined) patch.notes = updates.notes ?? null
+
+  const { error } = await supabase.from(TABLE).update(patch).eq('id', id)
+  if (error) throw error
 }
 
-export function updateFillUp(id: string, updates: Partial<Omit<FillUp, 'id'>>) {
-  const all = read()
-  const idx = all.findIndex((f) => f.id === id)
-  if (idx === -1) return
-  all[idx] = { ...all[idx], ...updates }
-  write(all)
+export async function deleteFillUp(id: string): Promise<void> {
+  const { error } = await supabase.from(TABLE).delete().eq('id', id)
+  if (error) throw error
 }
 
-export function deleteFillUp(id: string) {
-  write(read().filter((f) => f.id !== id))
-}
-
-export function exportAsCsv(): string {
-  const rows = getAllFillUps()
+export function exportAsCsv(fillUps: FillUp[]): string {
+  const rows = fillUps.slice().sort((a, b) => a.odometer - b.odometer)
   const header = 'date,odometer,gallons,totalCost,pricePerGallon,notes'
   const lines = rows.map((r) =>
     [

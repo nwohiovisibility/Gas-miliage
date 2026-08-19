@@ -10,18 +10,29 @@ type Tab = 'dashboard' | 'new' | 'history'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard')
-  const [fillUps, setFillUps] = useState<FillUp[]>(() => getAllFillUps())
+  const [fillUps, setFillUps] = useState<FillUp[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     preloadOcr()
+    refresh()
   }, [])
 
-  function refresh() {
-    setFillUps(getAllFillUps())
+  async function refresh() {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      setFillUps(await getAllFillUps())
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load fill-ups.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleExport() {
-    const csv = exportAsCsv()
+    const csv = exportAsCsv(fillUps)
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -43,15 +54,32 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {tab === 'dashboard' && <Dashboard fillUps={fillUps} />}
-        {tab === 'history' && <History fillUps={fillUps} onChange={refresh} />}
-        {tab === 'new' && (
-          <NewFillUp
-            onDone={() => {
-              refresh()
-              setTab('dashboard')
-            }}
-          />
+        {loadError && (
+          <div className="empty-state">
+            <p>Couldn't load your data: {loadError}</p>
+            <button className="btn-link" onClick={refresh}>
+              Retry
+            </button>
+          </div>
+        )}
+        {!loadError && loading && (
+          <div className="empty-state">
+            <p>Loading…</p>
+          </div>
+        )}
+        {!loadError && !loading && (
+          <>
+            {tab === 'dashboard' && <Dashboard fillUps={fillUps} />}
+            {tab === 'history' && <History fillUps={fillUps} onChange={refresh} />}
+            {tab === 'new' && (
+              <NewFillUp
+                onDone={() => {
+                  refresh()
+                  setTab('dashboard')
+                }}
+              />
+            )}
+          </>
         )}
       </main>
 

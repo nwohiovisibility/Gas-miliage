@@ -22,6 +22,8 @@ export default function NewFillUp({ onDone }: Props) {
   const [totalCost, setTotalCost] = useState('')
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   async function handleOdometerCapture(dataUrl: string) {
     setOdometerPhoto(dataUrl)
@@ -60,14 +62,22 @@ export default function NewFillUp({ onDone }: Props) {
     }
   }
 
-  function save() {
-    addFillUp({
-      date,
-      odometer: parseFloat(odometer),
-      gallons: parseFloat(gallons),
-      totalCost: parseFloat(totalCost)
-    })
-    onDone()
+  async function save() {
+    setSaving(true)
+    setSaveError(null)
+    try {
+      await addFillUp({
+        date,
+        odometer: parseFloat(odometer),
+        gallons: parseFloat(gallons),
+        totalCost: parseFloat(totalCost)
+      })
+      onDone()
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save fill-up.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const odometerValid = odometer.trim() !== '' && !isNaN(parseFloat(odometer))
@@ -157,8 +167,9 @@ export default function NewFillUp({ onDone }: Props) {
                 : '—'}
             </dd>
           </dl>
-          <button className="btn btn-primary" onClick={save}>
-            Save fill-up
+          {saveError && <p className="scan-warning">{saveError}</p>}
+          <button className="btn btn-primary" disabled={saving} onClick={save}>
+            {saving ? 'Saving…' : 'Save fill-up'}
           </button>
         </div>
       )}

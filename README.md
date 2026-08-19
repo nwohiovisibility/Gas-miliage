@@ -1,9 +1,48 @@
 # Gas Mileage Tracker
 
 A phone-installable web app (PWA) that scans your odometer and gas pump display
-with your camera, does the text recognition entirely on-device (no cloud, no
-API keys, works offline after first load), and tracks fuel cost and MPG over
-time.
+with your camera, does the text recognition entirely on-device, and tracks
+fuel cost and MPG over time. Fill-up data is stored in Supabase.
+
+## Set up Supabase
+
+This app uses its own schema (`gas_tracker`) rather than the default
+`public` one, so it's the only thing in it.
+
+1. In your Supabase project's SQL editor, run:
+   ```sql
+   create schema gas_tracker;
+
+   create table gas_tracker.fill_ups (
+     id uuid primary key default gen_random_uuid(),
+     date date not null,
+     odometer numeric not null,
+     gallons numeric not null,
+     total_cost numeric not null,
+     notes text
+   );
+
+   -- No login in this app, so RLS stays off and the anon key has full
+   -- access to this table. Keep your anon key out of any public repo.
+   alter table gas_tracker.fill_ups disable row level security;
+
+   -- Custom schemas aren't reachable via the API by default; grant the
+   -- API roles access to this one.
+   grant usage on schema gas_tracker to anon, authenticated;
+   grant all on gas_tracker.fill_ups to anon, authenticated;
+   ```
+2. In **Project Settings → Data API**, add `gas_tracker` to **Exposed
+   schemas** (it only lists `public` by default — the table is
+   unreachable from the app until you add it here).
+3. In **Project Settings → API**, copy the **Project URL** and the
+   **anon public** key.
+4. In this folder, copy `.env.example` to `.env` and fill in those two
+   values:
+   ```
+   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
+   `.env` is gitignored, so these stay out of source control.
 
 ## Run it on your phone
 
@@ -33,9 +72,10 @@ this way. For a version that works without your computer being on, see
 - **Dashboard**: total spent, total gallons, average MPG, cost per mile, and
   MPG/cost trend charts.
 - **History**: every fill-up, editable or deletable, with per-fill-up MPG.
-- Data is stored locally in the browser (`localStorage`) — nothing leaves
-  your phone. Use "Export CSV" in the header to back it up or open it in a
-  spreadsheet.
+- Data is stored in your Supabase project, so it's shared across every
+  device that has this app's URL and `.env` values — the app needs a network
+  connection to load or save. Use "Export CSV" in the header to back it up
+  or open it in a spreadsheet.
 
 ## Deploying for real use
 
@@ -57,4 +97,10 @@ phone and "Add to Home Screen" as above.
 - OCR runs fully client-side via `tesseract.js` (WebAssembly); its language
   data is fetched from a CDN on first use and cached by the service worker
   for offline use afterward.
-- No backend, no accounts, no analytics.
+- Fill-up data is read/written via `@supabase/supabase-js`. No accounts, no
+  analytics — the app connects to Supabase with just the anon key, so
+  anyone with the deployed URL and that key can read/write the table (see
+  "Set up Supabase" above).
+- When deploying (Vercel/Netlify/etc.), set `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_ANON_KEY` as environment variables in that host's project
+  settings — the same two values from your local `.env`.

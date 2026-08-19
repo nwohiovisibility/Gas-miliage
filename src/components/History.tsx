@@ -11,6 +11,8 @@ interface Props {
 export default function History({ fillUps, onChange }: Props) {
   const rows = withMpg(fillUps).slice().reverse()
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [busyId, setBusyId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   if (fillUps.length === 0) {
     return (
@@ -20,19 +22,45 @@ export default function History({ fillUps, onChange }: Props) {
     )
   }
 
+  async function handleSave(id: string, updates: Partial<Omit<FillUp, 'id'>>) {
+    setBusyId(id)
+    setError(null)
+    try {
+      await updateFillUp(id, updates)
+      setEditingId(null)
+      onChange()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save changes.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this fill-up?')) return
+    setBusyId(id)
+    setError(null)
+    try {
+      await deleteFillUp(id)
+      onChange()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete.')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   return (
     <div className="history-list">
+      {error && <p className="scan-warning">{error}</p>}
       {rows.map((row) =>
         editingId === row.id ? (
           <EditRow
             key={row.id}
             fillUp={row}
+            saving={busyId === row.id}
             onCancel={() => setEditingId(null)}
-            onSave={(updates) => {
-              updateFillUp(row.id, updates)
-              setEditingId(null)
-              onChange()
-            }}
+            onSave={(updates) => handleSave(row.id, updates)}
           />
         ) : (
           <div key={row.id} className="history-row card">
@@ -47,19 +75,15 @@ export default function History({ fillUps, onChange }: Props) {
               {row.mpg !== undefined && <span className="history-mpg">{row.mpg.toFixed(1)} mpg</span>}
             </div>
             <div className="history-actions">
-              <button className="btn-link" onClick={() => setEditingId(row.id)}>
+              <button className="btn-link" disabled={busyId === row.id} onClick={() => setEditingId(row.id)}>
                 Edit
               </button>
               <button
                 className="btn-link btn-link-danger"
-                onClick={() => {
-                  if (confirm('Delete this fill-up?')) {
-                    deleteFillUp(row.id)
-                    onChange()
-                  }
-                }}
+                disabled={busyId === row.id}
+                onClick={() => handleDelete(row.id)}
               >
-                Delete
+                {busyId === row.id ? 'Deleting…' : 'Delete'}
               </button>
             </div>
           </div>
@@ -71,10 +95,12 @@ export default function History({ fillUps, onChange }: Props) {
 
 function EditRow({
   fillUp,
+  saving,
   onSave,
   onCancel
 }: {
   fillUp: FillUp
+  saving: boolean
   onSave: (updates: Partial<Omit<FillUp, 'id'>>) => void
   onCancel: () => void
 }) {
@@ -104,6 +130,7 @@ function EditRow({
       <div className="camera-actions">
         <button
           className="btn btn-primary"
+          disabled={saving}
           onClick={() =>
             onSave({
               date,
@@ -113,9 +140,9 @@ function EditRow({
             })
           }
         >
-          Save
+          {saving ? 'Saving…' : 'Save'}
         </button>
-        <button className="btn btn-secondary" onClick={onCancel}>
+        <button className="btn btn-secondary" disabled={saving} onClick={onCancel}>
           Cancel
         </button>
       </div>
