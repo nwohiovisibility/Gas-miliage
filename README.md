@@ -82,13 +82,22 @@ this way. For a version that works without your computer being on, see
 Running `npm run dev` from your computer works for testing, but for
 day-to-day use you'll want the app hosted somewhere with a real HTTPS
 address, so it works from anywhere and doesn't depend on your computer being
-on. Free static hosts that work well for this:
+on. This repo deploys to **GitHub Pages** via the included workflow
+(`.github/workflows/deploy.yml`):
 
-- **Vercel** or **Netlify**: connect this repo, they auto-detect Vite, done.
-- **GitHub Pages**: `npm run build` then publish the `dist/` folder.
+1. In the repo on GitHub: **Settings → Secrets and variables → Actions →
+   New repository secret**. Add `VITE_SUPABASE_URL` and
+   `VITE_SUPABASE_ANON_KEY` with the same values from your local `.env` —
+   the build needs them to bake the Supabase connection into the static
+   files (GitHub Pages can't read a `.env` file at request time).
+2. **Settings → Pages → Build and deployment → Source**, set to
+   **GitHub Actions**.
+3. Push to `main`. The workflow builds and deploys automatically — check
+   the **Actions** tab for progress, and the deployed URL afterward
+   (`https://<your-username>.github.io/Gas-miliage/`).
 
-Any of these gives you a permanent `https://` URL — open it once on your
-phone and "Add to Home Screen" as above.
+Open that URL once on your phone and "Add to Home Screen" as above. Every
+future push to `main` redeploys it.
 
 ## Tech notes
 
@@ -101,6 +110,6 @@ phone and "Add to Home Screen" as above.
   analytics — the app connects to Supabase with just the anon key, so
   anyone with the deployed URL and that key can read/write the table (see
   "Set up Supabase" above).
-- When deploying (Vercel/Netlify/etc.), set `VITE_SUPABASE_URL` and
-  `VITE_SUPABASE_ANON_KEY` as environment variables in that host's project
-  settings — the same two values from your local `.env`.
+- Deployed via GitHub Actions to GitHub Pages at the `/Gas-miliage/`
+  sub-path (`vite.config.ts` sets `base` accordingly for production
+  builds only — local dev still serves from `/`).

@@ -6,7 +6,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 // Camera access (getUserMedia) requires a secure context on phones, so the
 // dev server runs over HTTPS with a self-signed cert (accept the browser
 // warning once on your phone) in addition to localhost.
-export default defineConfig({
+// Served from https://<user>.github.io/Gas-miliage/ in production, so
+// asset URLs and the PWA manifest need that sub-path prefix. Dev keeps
+// serving from the root so the existing phone-testing flow is unaffected.
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/Gas-miliage/' : '/',
   plugins: [
     react(),
     basicSsl(),
@@ -21,7 +25,6 @@ export default defineConfig({
         background_color: '#0f172a',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -49,4 +52,4 @@ export default defineConfig({
   server: {
     host: true
   }
-})
+}))
