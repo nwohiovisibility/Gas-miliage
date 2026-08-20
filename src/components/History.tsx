@@ -17,6 +17,7 @@ export default function History({ fillUps, onChange }: Props) {
   if (fillUps.length === 0) {
     return (
       <div className="empty-state">
+        <span className="empty-state-icon">📋</span>
         <p>No fill-ups recorded yet.</p>
       </div>
     )

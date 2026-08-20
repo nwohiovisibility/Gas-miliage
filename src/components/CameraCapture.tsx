@@ -73,7 +73,9 @@ export default function CameraCapture({ label, onCapture }: Props) {
       {!error && (
         <div className="camera-viewport">
           <video ref={videoRef} playsInline muted />
-          <div className="camera-frame-guide" />
+          <div className="camera-frame-guide">
+            <span />
+          </div>
         </div>
       )}
       {error && <p className="camera-error">{error}</p>}

@@ -19,6 +19,7 @@ export default function Dashboard({ fillUps }: Props) {
   if (fillUps.length === 0) {
     return (
       <div className="empty-state">
+        <span className="empty-state-icon">📊</span>
         <p>No fill-ups yet.</p>
         <p>Tap "New Fill-Up" to scan your odometer and pump, and your stats will show up here.</p>
       </div>
@@ -28,36 +29,51 @@ export default function Dashboard({ fillUps }: Props) {
   return (
     <div className="dashboard">
       <div className="stat-grid">
-        <StatCard label="Total Spent" value={`$${totals.totalSpent.toFixed(2)}`} />
-        <StatCard label="Total Gallons" value={totals.totalGallons.toFixed(1)} />
+        <StatCard icon="💰" label="Total Spent" value={`$${totals.totalSpent.toFixed(2)}`} />
+        <StatCard icon="⛽" label="Total Gallons" value={totals.totalGallons.toFixed(1)} />
         <StatCard
+          icon="📈"
           label="Average MPG"
           value={totals.averageMpg ? totals.averageMpg.toFixed(1) : '—'}
+          accent="mpg"
         />
         <StatCard
+          icon="💵"
           label="Cost / Mile"
           value={totals.costPerMile ? `$${totals.costPerMile.toFixed(3)}` : '—'}
+          accent="cost"
         />
-        <StatCard label="Miles Tracked" value={totals.totalMiles.toLocaleString()} />
-        <StatCard label="Fill-Ups" value={String(totals.fillUpCount)} />
+        <StatCard icon="🛣️" label="Miles Tracked" value={totals.totalMiles.toLocaleString()} />
+        <StatCard icon="🧾" label="Fill-Ups" value={String(totals.fillUpCount)} />
       </div>
 
       <section className="card">
         <h3>MPG over time</h3>
-        <LineChart points={mpgPoints} color="#22c55e" unit=" mpg" />
+        <LineChart points={mpgPoints} color="var(--mpg-color)" unit=" mpg" />
       </section>
 
       <section className="card">
         <h3>Cost per fill-up</h3>
-        <LineChart points={costPoints} color="#f59e0b" unit="$" />
+        <LineChart points={costPoints} color="var(--cost-color)" unit="$" />
       </section>
     </div>
   )
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  icon,
+  label,
+  value,
+  accent
+}: {
+  icon: string
+  label: string
+  value: string
+  accent?: 'mpg' | 'cost'
+}) {
   return (
-    <div className="stat-card">
+    <div className={`stat-card${accent ? ` stat-card-${accent}` : ''}`}>
+      <span className="stat-icon">{icon}</span>
       <div className="stat-value">{value}</div>
       <div className="stat-label">{label}</div>
     </div>
