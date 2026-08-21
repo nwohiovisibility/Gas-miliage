@@ -10,5 +10,6 @@ if (!url || !anonKey) {
 }
 
 export const supabase = createClient(url, anonKey, {
-  db: { schema: 'gas_tracker' }
+  db: { schema: 'gas_tracker' },
+  auth: { experimental: { passkey: true } }
 })

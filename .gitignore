@@ -7,3 +7,5 @@ dist-ssr
 .env
 .env.*
 !.env.example
+sql/migrate-existing-table.sql
+sql/repoint-owner.sql

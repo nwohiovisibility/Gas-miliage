@@ -2,22 +2,37 @@ import { useEffect, useState } from 'react'
 import Dashboard from './components/Dashboard'
 import History from './components/History'
 import NewFillUp from './components/NewFillUp'
+import Lock from './components/Lock'
 import { getAllFillUps, exportAsCsv } from './storage'
 import { preloadOcr } from './ocr'
+import { supabase } from './supabaseClient'
 import type { FillUp } from './types'
 
 type Tab = 'dashboard' | 'new' | 'history'
 
 export default function App() {
+  const [unlocked, setUnlocked] = useState(false)
   const [tab, setTab] = useState<Tab>('dashboard')
   const [fillUps, setFillUps] = useState<FillUp[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!unlocked) return
     preloadOcr()
     refresh()
-  }, [])
+  }, [unlocked])
+
+  async function handleLock() {
+    await supabase.auth.signOut()
+    setUnlocked(false)
+    setFillUps([])
+    setTab('dashboard')
+  }
+
+  if (!unlocked) {
+    return <Lock onUnlock={() => setUnlocked(true)} />
+  }
 
   async function refresh() {
     setLoading(true)
@@ -46,11 +61,16 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>⛽ Gas Tracker</h1>
-        {tab !== 'new' && fillUps.length > 0 && (
-          <button className="btn-link" onClick={handleExport}>
-            Export CSV
+        <div className="app-header-actions">
+          {tab !== 'new' && fillUps.length > 0 && (
+            <button className="btn-link" onClick={handleExport}>
+              Export CSV
+            </button>
+          )}
+          <button className="btn-link" onClick={handleLock} title="Lock app">
+            🔒
           </button>
-        )}
+        </div>
       </header>
 
       <main className="app-main">

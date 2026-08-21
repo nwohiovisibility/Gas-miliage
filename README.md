@@ -7,42 +7,64 @@ fuel cost and MPG over time. Fill-up data is stored in Supabase.
 ## Set up Supabase
 
 This app uses its own schema (`gas_tracker`) rather than the default
-`public` one, so it's the only thing in it.
+`public` one, so it's the only thing in it. Data is locked to your one
+account via Row Level Security (RLS) — the anon key alone can't read or
+write anything.
 
-1. In your Supabase project's SQL editor, run:
-   ```sql
-   create schema gas_tracker;
+### 1. Create your account
 
-   create table gas_tracker.fill_ups (
-     id uuid primary key default gen_random_uuid(),
-     date date not null,
-     odometer numeric not null,
-     gallons numeric not null,
-     total_cost numeric not null,
-     notes text
-   );
+Rather than a public sign-up form (which anyone hitting the URL could
+use), create your one account directly in the dashboard:
+**Authentication → Users → Add user**. Use a real email and a strong
+password — this becomes your fallback sign-in if you ever lose access to
+your passkey/device. Copy the user's **UUID** shown in the table; you
+need it below.
 
-   -- No login in this app, so RLS stays off and the anon key has full
-   -- access to this table. Keep your anon key out of any public repo.
-   alter table gas_tracker.fill_ups disable row level security;
+Then, **Authentication → Settings**, turn **off** "Allow new users to
+sign up" — nobody else should be able to create an account.
 
-   -- Custom schemas aren't reachable via the API by default; grant the
-   -- API roles access to this one.
-   grant usage on schema gas_tracker to anon, authenticated;
-   grant all on gas_tracker.fill_ups to anon, authenticated;
-   ```
-2. In **Project Settings → Data API**, add `gas_tracker` to **Exposed
-   schemas** (it only lists `public` by default — the table is
-   unreachable from the app until you add it here).
-3. In **Project Settings → API**, copy the **Project URL** and the
-   **anon public** key.
-4. In this folder, copy `.env.example` to `.env` and fill in those two
-   values:
-   ```
-   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
-   ```
-   `.env` is gitignored, so these stay out of source control.
+### 2. Create the table
+
+Open the appropriate file in [`sql/`](sql/), replace `YOUR-USER-UUID`
+with the UUID from step 1, then copy **only the SQL statements** (not
+this README) into the Supabase SQL editor and run it:
+
+- [`sql/schema.sql`](sql/schema.sql) — fresh install, `gas_tracker.fill_ups`
+  doesn't exist yet.
+- `sql/migrate-existing-table.sql` — only if you already created the table
+  before Face ID/account login was added (no `user_id`/RLS yet). This one
+  is gitignored locally once you fill in your real UUID, so it won't show
+  up if you clone this repo elsewhere or look at it on GitHub.
+
+In **Project Settings → Data API**, add `gas_tracker` to **Exposed
+schemas** (it only lists `public` by default — the table is
+unreachable from the app until you add it here).
+
+### 3. Turn on Face ID / Touch ID / Windows Hello unlock
+
+**Authentication → Passkeys** → enable **Passkey authentication**. Fill
+in:
+- **RP Display Name**: anything, e.g. `Gas Tracker`
+- **RP ID**: your bare domain, e.g. `your-username.github.io` (no
+  `https://`, no path)
+- **RP Origins**: `https://your-username.github.io`
+
+The dashboard usually pre-fills these from your project's Site URL —
+double check the RP ID matches wherever you deploy the app (see
+"Deploying for real use" below), since a passkey only works on the
+origin it was registered for.
+
+### 4. Get your API keys and `.env`
+
+In **Project Settings → API**, copy the **Project URL** and the
+**anon public** key (also called the "publishable" key in newer
+projects). In this folder, copy `.env.example` to `.env` and fill in
+those two values:
+```
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+`.env` is gitignored, so these stay out of source control.
 
 ## Run it on your phone
 
@@ -63,8 +85,18 @@ Your dev machine needs to keep running `npm run dev` while you use the app
 this way. For a version that works without your computer being on, see
 **Deploying for real use** below.
 
+Passkeys are tied to the domain they were registered on, so Face ID won't
+work against this local dev URL if you registered it on the deployed
+GitHub Pages site (or vice versa) — use "Use password instead" on
+whichever origin you didn't set the passkey up on.
+
 ## Using it
 
+- **Lock screen**: opens every time you launch the app. Tap "Unlock with
+  Face ID" (or Touch ID / Windows Hello, depending on your device) — the
+  first time on a new device, use "Use password instead" and then set up
+  a passkey when prompted. Tap the 🔒 in the header any time to sign out
+  and re-lock.
 - **New Fill-Up**: scan your odometer, confirm/correct the reading, scan the
   pump display, confirm/correct gallons and total cost, then save.
 - OCR is a best-effort guess — every extracted number is shown in an editable
@@ -72,10 +104,10 @@ this way. For a version that works without your computer being on, see
 - **Dashboard**: total spent, total gallons, average MPG, cost per mile, and
   MPG/cost trend charts.
 - **History**: every fill-up, editable or deletable, with per-fill-up MPG.
-- Data is stored in your Supabase project, so it's shared across every
-  device that has this app's URL and `.env` values — the app needs a network
-  connection to load or save. Use "Export CSV" in the header to back it up
-  or open it in a spreadsheet.
+- Data is stored in your Supabase project, scoped to your account by Row
+  Level Security, so it's only ever visible to you, on any device you sign
+  into — the app needs a network connection to load or save. Use "Export
+  CSV" in the header to back it up or open it in a spreadsheet.
 
 ## Deploying for real use
 
@@ -106,10 +138,11 @@ future push to `main` redeploys it.
 - OCR runs fully client-side via `tesseract.js` (WebAssembly); its language
   data is fetched from a CDN on first use and cached by the service worker
   for offline use afterward.
-- Fill-up data is read/written via `@supabase/supabase-js`. No accounts, no
-  analytics — the app connects to Supabase with just the anon key, so
-  anyone with the deployed URL and that key can read/write the table (see
-  "Set up Supabase" above).
+- Fill-up data is read/written via `@supabase/supabase-js`. Access is
+  gated by Supabase Auth (a single account, no public sign-up) plus Row
+  Level Security, so the anon key alone can't read or write anything —
+  see "Set up Supabase" above. Face ID/Touch ID/Windows Hello unlock uses
+  Supabase's (beta) native passkey support.
 - Deployed via GitHub Actions to GitHub Pages at the `/Gas-miliage/`
   sub-path (`vite.config.ts` sets `base` accordingly for production
   builds only — local dev still serves from `/`).

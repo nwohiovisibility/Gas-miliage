@@ -1,0 +1,140 @@
+import { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
+
+interface Props {
+  onUnlock: () => void
+}
+
+type Mode = 'idle' | 'password' | 'offer-passkey'
+
+function arrivedViaEmailLink() {
+  return window.location.hash.includes('access_token') || new URLSearchParams(window.location.search).has('code')
+}
+
+export default function Lock({ onUnlock }: Props) {
+  const [mode, setMode] = useState<Mode>('idle')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Magic link / password recovery emails redirect back here with auth
+  // tokens in the URL. supabase-js turns those into a session automatically
+  // on load — this just recognizes that and skips straight to passkey setup
+  // instead of asking for a password we don't have.
+  useEffect(() => {
+    if (!arrivedViaEmailLink()) return
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        window.history.replaceState({}, '', window.location.pathname)
+        setMode('offer-passkey')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handlePasskeyUnlock() {
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.auth.signInWithPasskey()
+    setBusy(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    if (data.session) onUnlock()
+  }
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    setBusy(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    if (data.session) setMode('offer-passkey')
+  }
+
+  async function handleRegisterPasskey() {
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.registerPasskey()
+    setBusy(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    onUnlock()
+  }
+
+  return (
+    <div className="lock-screen">
+      <span className="lock-icon">🔒</span>
+      <h2>Gas Tracker is locked</h2>
+
+      {mode !== 'offer-passkey' && (
+        <>
+          <button className="btn btn-primary lock-unlock-btn" disabled={busy} onClick={handlePasskeyUnlock}>
+            {busy ? 'Waiting…' : '🔓 Unlock with Face ID'}
+          </button>
+
+          {error && <p className="scan-warning lock-error">{error}</p>}
+
+          {mode === 'idle' && (
+            <button className="btn-link" onClick={() => setMode('password')}>
+              Use password instead
+            </button>
+          )}
+
+          {mode === 'password' && (
+            <form className="lock-password-form" onSubmit={handlePasswordSubmit}>
+              <label>
+                Email
+                <input
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </label>
+              <button className="btn btn-secondary" type="submit" disabled={busy}>
+                {busy ? 'Signing in…' : 'Sign in'}
+              </button>
+            </form>
+          )}
+        </>
+      )}
+
+      {mode === 'offer-passkey' && (
+        <div className="lock-offer-passkey">
+          <p>Signed in. Set up Face ID so you can unlock without a password next time?</p>
+          {error && <p className="scan-warning lock-error">{error}</p>}
+          <div className="camera-actions">
+            <button className="btn btn-primary" disabled={busy} onClick={handleRegisterPasskey}>
+              {busy ? 'Setting up…' : 'Set up Face ID'}
+            </button>
+            <button className="btn btn-secondary" disabled={busy} onClick={onUnlock}>
+              Skip
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
