@@ -35,13 +35,23 @@ export default function Lock({ onUnlock }: Props) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function handlePasskeyUnlock() {
+  // Try Face ID the moment the lock screen appears, so there's nothing to
+  // tap in the common case. Some browsers require a user gesture before
+  // they'll show the prompt and block this silently — if so, this fails
+  // quietly and the button below is the fallback.
+  useEffect(() => {
+    if (arrivedViaEmailLink()) return
+    handlePasskeyUnlock({ silent: true })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  async function handlePasskeyUnlock(opts?: { silent?: boolean }) {
     setBusy(true)
-    setError(null)
+    if (!opts?.silent) setError(null)
     const { data, error } = await supabase.auth.signInWithPasskey()
     setBusy(false)
     if (error) {
-      setError(error.message)
+      if (!opts?.silent) setError(error.message)
       return
     }
     if (data.session) onUnlock()
@@ -79,7 +89,7 @@ export default function Lock({ onUnlock }: Props) {
 
       {mode !== 'offer-passkey' && (
         <>
-          <button className="btn btn-primary lock-unlock-btn" disabled={busy} onClick={handlePasskeyUnlock}>
+          <button className="btn btn-primary lock-unlock-btn" disabled={busy} onClick={() => handlePasskeyUnlock()}>
             {busy ? 'Waiting…' : '🔓 Unlock with Face ID'}
           </button>
 
