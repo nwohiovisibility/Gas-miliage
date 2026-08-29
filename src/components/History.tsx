@@ -1,7 +1,13 @@
+/*
+Filename: History.tsx
+Last Edit Date: 2026-08-29 EST
+Version: 1.0
+*/
 import { useState } from 'react'
 import type { FillUp } from '../types'
 import { withMpg } from '../stats'
 import { deleteFillUp, updateFillUp } from '../storage'
+import { formatCurrency } from '../format'
 
 interface Props {
   fillUps: FillUp[]
@@ -71,7 +77,7 @@ export default function History({ fillUps, onChange }: Props) {
             </div>
             <div className="history-details">
               <span>{row.gallons.toFixed(2)} gal</span>
-              <span>${row.totalCost.toFixed(2)}</span>
+              <span>{formatCurrency(row.totalCost)}</span>
               <span>${row.pricePerGallon.toFixed(3)}/gal</span>
               {row.mpg !== undefined && <span className="history-mpg">{row.mpg.toFixed(1)} mpg</span>}
             </div>

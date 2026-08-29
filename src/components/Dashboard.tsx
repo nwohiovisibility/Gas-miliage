@@ -1,5 +1,11 @@
+/*
+Filename: Dashboard.tsx
+Last Edit Date: 2026-08-29 EST
+Version: 1.1
+*/
 import type { FillUp } from '../types'
 import { computeTotals, withMpg } from '../stats'
+import { formatCurrency } from '../format'
 import LineChart from './LineChart'
 
 interface Props {
@@ -29,7 +35,7 @@ export default function Dashboard({ fillUps }: Props) {
   return (
     <div className="dashboard">
       <div className="stat-grid">
-        <StatCard icon="💰" label="Total Spent" value={`$${totals.totalSpent.toFixed(2)}`} />
+        <StatCard icon="💰" label="Total Spent" value={formatCurrency(totals.totalSpent)} />
         <StatCard icon="⛽" label="Total Gallons" value={totals.totalGallons.toFixed(1)} />
         <StatCard
           icon="📈"
@@ -49,12 +55,12 @@ export default function Dashboard({ fillUps }: Props) {
 
       <section className="card">
         <h3>MPG over time</h3>
-        <LineChart points={mpgPoints} color="var(--mpg-color)" unit=" mpg" />
+        <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
       </section>
 
       <section className="card">
         <h3>Cost per fill-up</h3>
-        <LineChart points={costPoints} color="var(--cost-color)" unit="$" />
+        <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
       </section>
     </div>
   )

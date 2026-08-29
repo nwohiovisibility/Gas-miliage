@@ -1,7 +1,13 @@
+/*
+Filename: NewFillUp.tsx
+Last Edit Date: 2026-08-29 EST
+Version: 1.0
+*/
 import { useState } from 'react'
 import CameraCapture from './CameraCapture'
 import { parseOdometerGuess, parsePumpGuess, recognizeText } from '../ocr'
 import { addFillUp } from '../storage'
+import { formatCurrency } from '../format'
 
 type Step = 'odometer' | 'odometer-review' | 'pump' | 'pump-review' | 'confirm'
 
@@ -159,7 +165,7 @@ export default function NewFillUp({ onDone }: Props) {
             <dt>Gallons</dt>
             <dd>{gallons}</dd>
             <dt>Total cost</dt>
-            <dd>${parseFloat(totalCost || '0').toFixed(2)}</dd>
+            <dd>{formatCurrency(parseFloat(totalCost || '0'))}</dd>
             <dt>Price/gal</dt>
             <dd>
               {gallons && totalCost

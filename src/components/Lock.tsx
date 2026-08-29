@@ -1,35 +1,74 @@
+/*
+Filename: Lock.tsx
+Last Edit Date: 2026-08-29 EST
+Version: 1.4
+*/
 import { useEffect, useState } from 'react'
+import { FunctionsHttpError } from '@supabase/supabase-js'
+import { startAuthentication, startRegistration } from '@simplewebauthn/browser'
+import type {
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON
+} from '@simplewebauthn/browser'
 import { supabase } from '../supabaseClient'
+
+// The passkey Edge Functions return a JSON body like { error: "..." } on
+// failure; supabase-js only exposes that through the raw Response on the
+// thrown error, so this digs it out for a message worth showing someone.
+async function invokeFn<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(name, { body })
+  if (error) {
+    let message = error.message
+    if (error instanceof FunctionsHttpError) {
+      try {
+        const parsed = await error.context.json()
+        if (parsed?.error) message = parsed.error
+      } catch {
+        // response wasn't JSON — fall back to the generic message
+      }
+    }
+    throw new Error(message)
+  }
+  return data as T
+}
 
 interface Props {
   onUnlock: () => void
 }
 
-type Mode = 'idle' | 'password' | 'offer-passkey'
+type Mode = 'idle' | 'password' | 'enter-code' | 'set-password' | 'offer-passkey'
 
 function arrivedViaEmailLink() {
   return window.location.hash.includes('access_token') || new URLSearchParams(window.location.search).has('code')
+}
+
+function arrivedViaRecoveryLink() {
+  return window.location.hash.includes('type=recovery')
 }
 
 export default function Lock({ onUnlock }: Props) {
   const [mode, setMode] = useState<Mode>('idle')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Magic link / password recovery emails redirect back here with auth
   // tokens in the URL. supabase-js turns those into a session automatically
-  // on load — this just recognizes that and skips straight to passkey setup
-  // instead of asking for a password we don't have.
+  // on load. A recovery link needs a new password set before anything else;
+  // any other link (e.g. a plain magic-link sign-in) can skip straight to
+  // passkey setup.
   useEffect(() => {
     if (!arrivedViaEmailLink()) return
+    const isRecovery = arrivedViaRecoveryLink()
     const {
       data: { subscription }
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
         window.history.replaceState({}, '', window.location.pathname)
-        setMode('offer-passkey')
+        setMode(isRecovery ? 'set-password' : 'offer-passkey')
       }
     })
     return () => subscription.unsubscribe()
@@ -48,13 +87,26 @@ export default function Lock({ onUnlock }: Props) {
   async function handlePasskeyUnlock(opts?: { silent?: boolean }) {
     setBusy(true)
     if (!opts?.silent) setError(null)
-    const { data, error } = await supabase.auth.signInWithPasskey()
-    setBusy(false)
-    if (error) {
-      if (!opts?.silent) setError(error.message)
-      return
+    try {
+      const options = await invokeFn<PublicKeyCredentialRequestOptionsJSON>('gas-passkey-login', {
+        action: 'options'
+      })
+      const credential = await startAuthentication({ optionsJSON: options })
+      const verified = await invokeFn<{ email: string; token_hash: string }>('gas-passkey-login', {
+        action: 'verify',
+        credential
+      })
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: verified.token_hash,
+        type: 'magiclink'
+      })
+      if (verifyError) throw verifyError
+      onUnlock()
+    } catch (err) {
+      if (!opts?.silent) setError(err instanceof Error ? err.message : 'Could not unlock with Face ID.')
+    } finally {
+      setBusy(false)
     }
-    if (data.session) onUnlock()
   }
 
   async function handlePasswordSubmit(e: React.FormEvent) {
@@ -70,16 +122,73 @@ export default function Lock({ onUnlock }: Props) {
     if (data.session) setMode('offer-passkey')
   }
 
-  async function handleRegisterPasskey() {
+  async function handleForgotPassword() {
+    if (!email) {
+      setError('Enter your email above first, then tap "Forgot password?"')
+      return
+    }
     setBusy(true)
     setError(null)
-    const { error } = await supabase.auth.registerPasskey()
+    // Email clients (Outlook Safe Links, etc.) often prefetch/scan links in
+    // messages, silently burning the single-use recovery link before a
+    // person clicks it. The email also includes a 6-digit code alongside
+    // the link, so we ask for that instead of depending on the link at all.
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin
+    })
     setBusy(false)
     if (error) {
       setError(error.message)
       return
     }
-    onUnlock()
+    setMode('enter-code')
+  }
+
+  async function handleVerifyCode(e: React.FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: code.trim(),
+      type: 'recovery'
+    })
+    setBusy(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    if (data.session) setMode('set-password')
+  }
+
+  async function handleSetPassword(e: React.FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setBusy(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    setMode('offer-passkey')
+  }
+
+  async function handleRegisterPasskey() {
+    setBusy(true)
+    setError(null)
+    try {
+      const options = await invokeFn<PublicKeyCredentialCreationOptionsJSON>('gas-passkey-register', {
+        action: 'options'
+      })
+      const credential = await startRegistration({ optionsJSON: options })
+      await invokeFn('gas-passkey-register', { action: 'verify', credential })
+      onUnlock()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not set up Face ID.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -87,7 +196,52 @@ export default function Lock({ onUnlock }: Props) {
       <span className="lock-icon">🔒</span>
       <h2>Gas Tracker is locked</h2>
 
-      {mode !== 'offer-passkey' && (
+      {mode === 'enter-code' && (
+        <form className="lock-password-form" onSubmit={handleVerifyCode}>
+          <p>Enter the 6-digit code we emailed to {email}.</p>
+          {error && <p className="scan-warning lock-error">{error}</p>}
+          <label>
+            Code
+            <input
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              maxLength={6}
+              required
+            />
+          </label>
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? 'Verifying…' : 'Verify code'}
+          </button>
+          <button className="btn-link" type="button" disabled={busy} onClick={handleForgotPassword}>
+            Resend code
+          </button>
+        </form>
+      )}
+
+      {mode === 'set-password' && (
+        <form className="lock-password-form" onSubmit={handleSetPassword}>
+          <p>Set a new password for your account.</p>
+          {error && <p className="scan-warning lock-error">{error}</p>}
+          <label>
+            New password
+            <input
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+          </label>
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {busy ? 'Saving…' : 'Save password'}
+          </button>
+        </form>
+      )}
+
+      {mode !== 'offer-passkey' && mode !== 'set-password' && mode !== 'enter-code' && (
         <>
           <button className="btn btn-primary lock-unlock-btn" disabled={busy} onClick={() => handlePasskeyUnlock()}>
             {busy ? 'Waiting…' : '🔓 Unlock with Face ID'}
@@ -125,6 +279,9 @@ export default function Lock({ onUnlock }: Props) {
               </label>
               <button className="btn btn-secondary" type="submit" disabled={busy}>
                 {busy ? 'Signing in…' : 'Sign in'}
+              </button>
+              <button className="btn-link" type="button" disabled={busy} onClick={handleForgotPassword}>
+                Forgot password?
               </button>
             </form>
           )}

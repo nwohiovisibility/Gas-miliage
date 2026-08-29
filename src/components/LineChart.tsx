@@ -1,3 +1,8 @@
+/*
+Filename: LineChart.tsx
+Last Edit Date: 2026-08-29 EST
+Version: 1.0
+*/
 import { useId, useRef, useState } from 'react'
 
 interface Point {
@@ -8,11 +13,11 @@ interface Point {
 interface Props {
   points: Point[]
   color: string
-  unit?: string
+  formatValue?: (value: number) => string
   height?: number
 }
 
-export default function LineChart({ points, color, unit = '', height = 160 }: Props) {
+export default function LineChart({ points, color, formatValue = (v) => v.toFixed(1), height = 160 }: Props) {
   const gradientId = useId()
   const svgRef = useRef<SVGSVGElement>(null)
   const [hover, setHover] = useState<number | null>(null)
@@ -23,8 +28,7 @@ export default function LineChart({ points, color, unit = '', height = 160 }: Pr
   if (points.length === 1) {
     return (
       <p className="chart-empty">
-        {points[0].y.toFixed(1)}
-        {unit} — add another fill-up to see a trend
+        {formatValue(points[0].y)} — add another fill-up to see a trend
       </p>
     )
   }
@@ -119,8 +123,7 @@ export default function LineChart({ points, color, unit = '', height = 160 }: Pr
 
       {!active && (
         <text x={width - padding} y={padding} textAnchor="end" className="chart-axis-label">
-          max {max.toFixed(1)}
-          {unit}
+          max {formatValue(max)}
         </text>
       )}
 
@@ -130,8 +133,7 @@ export default function LineChart({ points, color, unit = '', height = 160 }: Pr
             {active.label}
           </text>
           <text textAnchor={tooltipRight ? 'end' : 'start'} y={13} className="chart-tooltip-value">
-            {active.value.toFixed(1)}
-            {unit}
+            {formatValue(active.value)}
           </text>
         </g>
       )}

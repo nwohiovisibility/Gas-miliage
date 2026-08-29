@@ -1,3 +1,8 @@
+/*
+Filename: vite.config.ts
+Last Edit Date: 2026-08-29 EST
+Version: 1.0
+*/
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import basicSsl from '@vitejs/plugin-basic-ssl'
@@ -50,6 +55,9 @@ export default defineConfig(({ command }) => ({
     })
   ],
   server: {
-    host: true
+    host: true,
+    open: true,
+    port: 5173,
+    strictPort: true
   }
 }))

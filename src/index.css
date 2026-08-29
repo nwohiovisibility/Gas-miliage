@@ -1,20 +1,54 @@
+/*
+Filename: index.css
+Last Edit Date: 2026-08-29 EST
+Version: 1.5
+*/
 :root {
-  color-scheme: dark;
-  --bg: #0b1220;
-  --surface: #1e293b;
-  --surface-2: #273549;
-  --surface-hover: #2f3f56;
-  --text: #f1f5f9;
-  --text-dim: #94a3b8;
-  --text-mute: #64748b;
+  color-scheme: light dark;
+  /* Steel-blue-grey, dark */
+  --bg: #29394a;
+  --surface: #35485c;
+  --surface-2: #405670;
+  --surface-hover: #4b6482;
+  --text: #eef3f8;
+  --text-dim: #a7b9cb;
+  --text-mute: #7c92a8;
   --accent: #fbbf24;
+  --accent-text: #fbbf24;
   --accent-dim: #b8860f;
   --mpg-color: #199e70;
   --cost-color: #d95926;
   --danger: #f87171;
-  --border: #334155;
-  --border-soft: rgba(148, 163, 184, 0.14);
+  --border: #4b6482;
+  --border-soft: rgba(167, 185, 203, 0.16);
   --shadow-card: 0 8px 24px -12px rgba(0, 0, 0, 0.55);
+  --header-glow: rgba(53, 72, 92, 0.6);
+  --nav-bg: rgba(53, 72, 92, 0.75);
+  --bg-top: #3d5268;
+  --bg-bottom: #202b38;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Steel-blue-grey, light */
+    --bg: #dde5ed;
+    --surface: #f4f7fa;
+    --surface-2: #e7edf3;
+    --surface-hover: #d7e0e9;
+    --text: #1f2b38;
+    --text-dim: #4c5d70;
+    --text-mute: #74889c;
+    --accent-text: #8a5f0a;
+    --accent-dim: #92660b;
+    --danger: #dc2626;
+    --border: #c2ceda;
+    --border-soft: rgba(37, 56, 77, 0.12);
+    --shadow-card: 0 8px 24px -12px rgba(31, 43, 56, 0.18);
+    --header-glow: rgba(244, 247, 250, 0.75);
+    --nav-bg: rgba(244, 247, 250, 0.85);
+    --bg-top: #d7e1ea;
+    --bg-bottom: #aec2d4;
+  }
 }
 
 * {
@@ -32,7 +66,7 @@ body {
   margin: 0;
   background:
     radial-gradient(1200px 600px at 50% -10%, rgba(251, 191, 36, 0.08), transparent 60%),
-    var(--bg);
+    linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -62,7 +96,7 @@ a:focus-visible {
   justify-content: space-between;
   padding: max(14px, env(safe-area-inset-top)) 18px 14px;
   border-bottom: 1px solid var(--border-soft);
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.6), transparent);
+  background: linear-gradient(180deg, var(--header-glow), transparent);
   backdrop-filter: blur(8px);
   flex-shrink: 0;
 }
@@ -91,7 +125,7 @@ a:focus-visible {
   display: flex;
   gap: 4px;
   border-top: 1px solid var(--border-soft);
-  background: rgba(30, 41, 59, 0.75);
+  background: var(--nav-bg);
   backdrop-filter: blur(10px);
   padding: 6px 8px env(safe-area-inset-bottom);
   flex-shrink: 0;
@@ -122,7 +156,7 @@ a:focus-visible {
 }
 
 .bottom-nav button.active {
-  color: var(--accent);
+  color: var(--accent-text);
   background: rgba(251, 191, 36, 0.12);
 }
 
@@ -170,10 +204,12 @@ a:focus-visible {
 }
 
 .stat-card-mpg {
+  background: color-mix(in srgb, var(--mpg-color) 20%, var(--surface));
   border-color: color-mix(in srgb, var(--mpg-color) 35%, var(--border-soft));
 }
 
 .stat-card-cost {
+  background: color-mix(in srgb, var(--cost-color) 20%, var(--surface));
   border-color: color-mix(in srgb, var(--cost-color) 35%, var(--border-soft));
 }
 
@@ -381,7 +417,7 @@ a:focus-visible {
 .btn-link {
   background: none;
   border: none;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 0.85rem;
   font-weight: 600;
   padding: 6px 0;
@@ -432,7 +468,7 @@ a:focus-visible {
 }
 
 .scan-warning {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 0.85rem;
   margin-top: -4px;
 }
@@ -560,6 +596,10 @@ input:focus {
 
 .lock-icon {
   font-size: 2.6rem;
+}
+
+.lock-screen .btn-link {
+  align-self: center;
 }
 
 .lock-screen h2 {

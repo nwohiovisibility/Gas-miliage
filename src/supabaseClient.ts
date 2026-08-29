@@ -1,3 +1,8 @@
+/*
+Filename: supabaseClient.ts
+Last Edit Date: 2026-08-29 EST
+Version: 1.1
+*/
 import { createClient } from '@supabase/supabase-js'
 
 const url = import.meta.env.VITE_SUPABASE_URL
@@ -10,6 +15,5 @@ if (!url || !anonKey) {
 }
 
 export const supabase = createClient(url, anonKey, {
-  db: { schema: 'gas_tracker' },
-  auth: { experimental: { passkey: true } }
+  db: { schema: 'gas_tracker' }
 })
