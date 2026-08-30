@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
-Last Edit Date: 2026-08-29 EST
-Version: 1.2
+Last Edit Date: 2026-08-30 EST
+Version: 1.3
 */
 import type { FillUp } from '../types'
 import { computeTotals, withMpg } from '../stats'
@@ -58,15 +58,19 @@ export default function Dashboard({ fillUps }: Props) {
         <StatCard icon="🧾" label="Fill-Ups" value={String(totals.fillUpCount)} />
       </div>
 
-      <section className="card">
-        <h3>MPG over time</h3>
-        <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
-      </section>
+      {mpgPoints.length > 1 && (
+        <section className="card">
+          <h3>MPG over time</h3>
+          <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
+        </section>
+      )}
 
-      <section className="card">
-        <h3>Cost per fill-up</h3>
-        <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
-      </section>
+      {costPoints.length > 1 && (
+        <section className="card">
+          <h3>Cost per fill-up</h3>
+          <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
+        </section>
+      )}
     </div>
   )
 }
