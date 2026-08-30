@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.4
+Version: 1.5
 */
 import type { FillUp } from '../types'
 import { computeTotals, withMpg } from '../stats'
@@ -49,45 +49,19 @@ export default function Dashboard({ fillUps }: Props) {
           value={totals.costPerMile ? `$${totals.costPerMile.toFixed(3)}` : '—'}
           accent="cost"
         />
-        <StatCard
-          icon="⛽"
-          label="Cost / Gallon"
-          value={totals.costPerGallon ? formatCurrency(totals.costPerGallon) : '—'}
-        />
         <StatCard icon="🛣️" label="Miles Tracked" value={totals.totalMiles.toLocaleString()} />
         <StatCard icon="🧾" label="Fill-Ups" value={String(totals.fillUpCount)} />
-
-        {mpgPoints.length <= 1 && (
-          <StatCard
-            icon="📈"
-            label="MPG Trend"
-            value={mpgPoints.length === 1 ? `${mpgPoints[0].y.toFixed(1)} mpg` : '—'}
-            accent="mpg"
-          />
-        )}
-        {costPoints.length <= 1 && (
-          <StatCard
-            icon="💵"
-            label="Cost Trend"
-            value={costPoints.length === 1 ? formatCurrency(costPoints[0].y) : '—'}
-            accent="cost"
-          />
-        )}
       </div>
 
-      {mpgPoints.length > 1 && (
-        <section className="card">
-          <h3>MPG over time</h3>
-          <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
-        </section>
-      )}
+      <section className="card">
+        <h3>MPG over time</h3>
+        <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
+      </section>
 
-      {costPoints.length > 1 && (
-        <section className="card">
-          <h3>Cost per fill-up</h3>
-          <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
-        </section>
-      )}
+      <section className="card">
+        <h3>Cost per fill-up</h3>
+        <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
+      </section>
     </div>
   )
 }

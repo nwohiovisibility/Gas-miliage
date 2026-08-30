@@ -1,7 +1,7 @@
 /*
 Filename: stats.ts
-Last Edit Date: 2026-08-29 EST
-Version: 1.0
+Last Edit Date: 2026-08-30 EST
+Version: 1.1
 */
 import type { FillUp, FillUpWithMpg } from './types'
 
@@ -25,7 +25,6 @@ export interface Totals {
   totalMiles: number
   averageMpg: number | undefined
   costPerMile: number | undefined
-  costPerGallon: number | undefined
   fillUpCount: number
 }
 
@@ -42,7 +41,6 @@ export function computeTotals(fillUpsAscByOdometer: FillUp[]): Totals {
   const gallonsForMpg = fillUpsAscByOdometer.slice(1).reduce((sum, f) => sum + f.gallons, 0)
   const averageMpg = totalMiles > 0 && gallonsForMpg > 0 ? totalMiles / gallonsForMpg : undefined
   const costPerMile = totalMiles > 0 ? totalSpent / totalMiles : undefined
-  const costPerGallon = totalGallons > 0 ? totalSpent / totalGallons : undefined
 
   return {
     totalSpent,
@@ -50,7 +48,6 @@ export function computeTotals(fillUpsAscByOdometer: FillUp[]): Totals {
     totalMiles,
     averageMpg,
     costPerMile,
-    costPerGallon,
     fillUpCount: fillUpsAscByOdometer.length
   }
 }
