@@ -1,7 +1,7 @@
 /*
 Filename: NewFillUp.tsx
-Last Edit Date: 2026-08-29 EST
-Version: 1.0
+Last Edit Date: 2026-08-30 EST
+Version: 1.1
 */
 import { useState } from 'react'
 import CameraCapture from './CameraCapture'
@@ -46,6 +46,18 @@ export default function NewFillUp({ onDone }: Props) {
       setScanning(false)
       setStep('odometer-review')
     }
+  }
+
+  function handleSkipOdometer() {
+    setOdometerPhoto(null)
+    setScanError(null)
+    setStep('odometer-review')
+  }
+
+  function handleSkipPump() {
+    setPumpPhoto(null)
+    setScanError(null)
+    setStep('pump-review')
   }
 
   async function handlePumpCapture(dataUrl: string) {
@@ -95,7 +107,11 @@ export default function NewFillUp({ onDone }: Props) {
       <StepIndicator step={step} />
 
       {step === 'odometer' && (
-        <CameraCapture label="Step 1 — Scan your odometer" onCapture={handleOdometerCapture} />
+        <CameraCapture
+          label="Step 1 — Scan your odometer"
+          onCapture={handleOdometerCapture}
+          onSkip={handleSkipOdometer}
+        />
       )}
 
       {step === 'odometer-review' && (
@@ -122,7 +138,9 @@ export default function NewFillUp({ onDone }: Props) {
         </ReviewPanel>
       )}
 
-      {step === 'pump' && <CameraCapture label="Step 2 — Scan the pump display" onCapture={handlePumpCapture} />}
+      {step === 'pump' && (
+        <CameraCapture label="Step 2 — Scan the pump display" onCapture={handlePumpCapture} onSkip={handleSkipPump} />
+      )}
 
       {step === 'pump-review' && (
         <ReviewPanel photo={pumpPhoto} scanning={scanning} error={scanError} onRetake={() => setStep('pump')}>

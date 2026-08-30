@@ -1,11 +1,17 @@
+/*
+Filename: CameraCapture.tsx
+Last Edit Date: 2026-08-30 EST
+Version: 1.0
+*/
 import { useEffect, useRef, useState } from 'react'
 
 interface Props {
   label: string
   onCapture: (dataUrl: string) => void
+  onSkip: () => void
 }
 
-export default function CameraCapture({ label, onCapture }: Props) {
+export default function CameraCapture({ label, onCapture, onSkip }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -89,6 +95,9 @@ export default function CameraCapture({ label, onCapture }: Props) {
           <input type="file" accept="image/*" capture="environment" onChange={handleFile} hidden />
         </label>
       </div>
+      <button className="btn-link" onClick={onSkip}>
+        Enter manually instead
+      </button>
     </div>
   )
 }
