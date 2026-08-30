@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.3
+Version: 1.4
 */
 import type { FillUp } from '../types'
 import { computeTotals, withMpg } from '../stats'
@@ -56,6 +56,23 @@ export default function Dashboard({ fillUps }: Props) {
         />
         <StatCard icon="🛣️" label="Miles Tracked" value={totals.totalMiles.toLocaleString()} />
         <StatCard icon="🧾" label="Fill-Ups" value={String(totals.fillUpCount)} />
+
+        {mpgPoints.length <= 1 && (
+          <StatCard
+            icon="📈"
+            label="MPG Trend"
+            value={mpgPoints.length === 1 ? `${mpgPoints[0].y.toFixed(1)} mpg` : '—'}
+            accent="mpg"
+          />
+        )}
+        {costPoints.length <= 1 && (
+          <StatCard
+            icon="💵"
+            label="Cost Trend"
+            value={costPoints.length === 1 ? formatCurrency(costPoints[0].y) : '—'}
+            accent="cost"
+          />
+        )}
       </div>
 
       {mpgPoints.length > 1 && (
