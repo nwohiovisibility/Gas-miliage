@@ -1,13 +1,17 @@
 /*
 Filename: NewFillUp.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.1
+Version: 1.15
 */
 import { useState } from 'react'
 import CameraCapture from './CameraCapture'
+import OdometerDisplay from './OdometerDisplay'
+import RegisterDisplay from './RegisterDisplay'
+import GallonsDisplay from './GallonsDisplay'
+import CalculatorDisplay from './CalculatorDisplay'
+import CalendarDisplay from './CalendarDisplay'
 import { parseOdometerGuess, parsePumpGuess, recognizeText } from '../ocr'
 import { addFillUp } from '../storage'
-import { formatCurrency } from '../format'
 
 type Step = 'odometer' | 'odometer-review' | 'pump' | 'pump-review' | 'confirm'
 
@@ -111,6 +115,7 @@ export default function NewFillUp({ onDone }: Props) {
           label="Step 1 — Scan your odometer"
           onCapture={handleOdometerCapture}
           onSkip={handleSkipOdometer}
+          onBack={onDone}
         />
       )}
 
@@ -123,14 +128,7 @@ export default function NewFillUp({ onDone }: Props) {
         >
           <label>
             Odometer reading (miles)
-            <input
-              type="number"
-              inputMode="decimal"
-              autoFocus
-              value={odometer}
-              onChange={(e) => setOdometer(e.target.value)}
-              placeholder="e.g. 45231"
-            />
+            <OdometerDisplay value={odometer} onChange={setOdometer} autoFocus />
           </label>
           <button className="btn btn-primary" disabled={!odometerValid} onClick={() => setStep('pump')}>
             Next: scan pump →
@@ -139,30 +137,23 @@ export default function NewFillUp({ onDone }: Props) {
       )}
 
       {step === 'pump' && (
-        <CameraCapture label="Step 2 — Scan the pump display" onCapture={handlePumpCapture} onSkip={handleSkipPump} />
+        <CameraCapture
+          label="Step 2 — Scan the pump display"
+          onCapture={handlePumpCapture}
+          onSkip={handleSkipPump}
+          onBack={() => setStep('odometer-review')}
+        />
       )}
 
       {step === 'pump-review' && (
         <ReviewPanel photo={pumpPhoto} scanning={scanning} error={scanError} onRetake={() => setStep('pump')}>
           <label>
             Gallons
-            <input
-              type="number"
-              inputMode="decimal"
-              value={gallons}
-              onChange={(e) => setGallons(e.target.value)}
-              placeholder="e.g. 12.4"
-            />
+            <GallonsDisplay value={gallons} onChange={setGallons} />
           </label>
           <label>
             Total cost ($)
-            <input
-              type="number"
-              inputMode="decimal"
-              value={totalCost}
-              onChange={(e) => setTotalCost(e.target.value)}
-              placeholder="e.g. 41.63"
-            />
+            <RegisterDisplay value={totalCost} onChange={setTotalCost} />
           </label>
           <button className="btn btn-primary" disabled={!pumpValid} onClick={() => setStep('confirm')}>
             Next: confirm →
@@ -175,26 +166,45 @@ export default function NewFillUp({ onDone }: Props) {
           <h3>Confirm fill-up</h3>
           <label>
             Date
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <CalendarDisplay value={date} onChange={setDate} />
           </label>
-          <dl className="confirm-summary">
-            <dt>Odometer</dt>
-            <dd>{odometer} mi</dd>
-            <dt>Gallons</dt>
-            <dd>{gallons}</dd>
-            <dt>Total cost</dt>
-            <dd>{formatCurrency(parseFloat(totalCost || '0'))}</dd>
-            <dt>Price/gal</dt>
-            <dd>
-              {gallons && totalCost
-                ? `$${(parseFloat(totalCost) / parseFloat(gallons)).toFixed(3)}`
-                : '—'}
-            </dd>
-          </dl>
+          <div className="review-fields">
+            <label>
+              Odometer (miles)
+              <OdometerDisplay value={odometer} onChange={setOdometer} />
+            </label>
+            <label>
+              Gallons
+              <GallonsDisplay value={gallons} onChange={setGallons} />
+            </label>
+            <label>
+              Total cost ($)
+              <RegisterDisplay value={totalCost} onChange={setTotalCost} />
+            </label>
+            <div className="confirm-price-per-gal">
+              <span className="confirm-price-per-gal-label">Price/gal</span>
+              <CalculatorDisplay
+                value={
+                  gallons && totalCost
+                    ? `$${(parseFloat(totalCost) / parseFloat(gallons)).toFixed(3)}`
+                    : '—'
+                }
+              />
+            </div>
+          </div>
           {saveError && <p className="scan-warning">{saveError}</p>}
-          <button className="btn btn-primary" disabled={saving} onClick={save}>
-            {saving ? 'Saving…' : 'Save fill-up'}
-          </button>
+          <div className="camera-actions">
+            <button className="btn btn-secondary" disabled={saving} onClick={() => setStep('pump-review')}>
+              ‹ Back
+            </button>
+            <button
+              className="btn btn-primary"
+              disabled={saving || !odometerValid || !pumpValid}
+              onClick={save}
+            >
+              {saving ? 'Saving…' : 'Save fill-up'}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -234,9 +244,11 @@ function ReviewPanel({
       {!scanning && (
         <>
           <div className="review-fields">{children}</div>
-          <button className="btn-link" onClick={onRetake}>
-            Retake photo
-          </button>
+          <div className="camera-actions">
+            <button className="btn btn-secondary" onClick={onRetake}>
+              {photo ? 'Retake photo' : '‹ Back'}
+            </button>
+          </div>
         </>
       )}
     </div>

@@ -1,7 +1,7 @@
 /*
 Filename: index.css
-Last Edit Date: 2026-08-29 EST
-Version: 1.5
+Last Edit Date: 2026-08-30 EST
+Version: 1.20
 */
 :root {
   color-scheme: light dark;
@@ -506,26 +506,355 @@ input:focus {
   box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.18);
 }
 
-.confirm-summary {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px 16px;
-  margin: 16px 0;
-  padding: 14px;
-  background: var(--surface-2);
-  border-radius: 12px;
-}
-
-.confirm-summary dt {
-  color: var(--text-dim);
-  font-size: 0.85rem;
-}
-
-.confirm-summary dd {
-  margin: 0;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+label:has(.odometer-field),
+label:has(.register-field),
+label:has(.gallons-field),
+label:has(.calendar-field) {
   text-align: right;
+}
+
+.odometer-field,
+.register-field,
+.gallons-field,
+.calendar-field {
+  position: relative;
+  width: fit-content;
+  align-self: flex-end;
+}
+
+.digit-field-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--accent);
+  appearance: textfield;
+}
+
+.digit-field-input::-webkit-outer-spin-button,
+.digit-field-input::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.digit-field-input:focus {
+  outline: none;
+  box-shadow: none;
+  border: none;
+}
+
+.odometer-display {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  width: fit-content;
+  padding: 6px;
+  background: #161616;
+  border-radius: 6px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.7);
+  transition: opacity 0.15s ease;
+}
+
+.odometer-placeholder {
+  opacity: 0.35;
+}
+
+.odometer-digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 34px;
+  background: linear-gradient(180deg, #2c2c2c, #161616);
+  color: #f4d35e;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+  border-radius: 3px;
+  border: 1px solid #000;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+.register-display {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  width: fit-content;
+  padding: 5px 7px;
+  background: linear-gradient(180deg, #17130f, #060402);
+  border-radius: 20px;
+  border: 3px solid #a97d3c;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.85),
+    0 0 0 1px #4a3410;
+  transition: opacity 0.15s ease;
+}
+
+.register-placeholder {
+  opacity: 0.4;
+}
+
+.register-digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #2a2620, #050403 75%);
+  color: #f2e9d8;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid #3a2c10;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+.register-dollar {
+  background: radial-gradient(circle at 35% 30%, #7a2a1c, #2a0a05 75%);
+  color: #ffdca8;
+}
+
+.register-dot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 6px;
+  height: 26px;
+  padding-bottom: 2px;
+  color: #f2e9d8;
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.gallons-display {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  width: fit-content;
+  padding: 5px;
+  background: linear-gradient(180deg, #dde2e6, #9aa4ac);
+  border-radius: 6px;
+  border: 2px solid #6b7480;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.15s ease;
+}
+
+.gallons-placeholder {
+  opacity: 0.4;
+}
+
+.gallons-digit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 30px;
+  background: #0a0f14;
+  color: #bfe8ff;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  font-size: 1.15rem;
+  font-variant-numeric: tabular-nums;
+  border-radius: 2px;
+  border: 1px solid #1c2733;
+  text-shadow: 0 0 4px rgba(150, 220, 255, 0.55);
+}
+
+.gallons-unit {
+  font-size: 0.9rem;
+}
+
+.gallons-dot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 6px;
+  height: 30px;
+  padding-bottom: 4px;
+  color: #0a0f14;
+  font-weight: 900;
+}
+
+.confirm-price-per-gal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin: -4px 0 0;
+}
+
+.confirm-price-per-gal-label {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.calendar-field-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.calendar-field-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.calendar-display {
+  display: flex;
+  gap: 12px;
+  width: fit-content;
+  margin-bottom: 6px;
+}
+
+.calendar-page {
+  position: relative;
+  width: 46px;
+  background: #fdfaf3;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow:
+    2px 3px 0 -1px #eee8d8,
+    2px 3px 2px rgba(0, 0, 0, 0.22),
+    4px 6px 0 -2px #e0dac8,
+    4px 6px 4px rgba(0, 0, 0, 0.18);
+}
+
+.calendar-page-header {
+  background: #c1272d;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 3px 0;
+}
+
+.calendar-page-body {
+  padding: 6px 0 8px;
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: #2b2b2b;
+}
+
+.calendar-page-year {
+  width: 60px;
+}
+
+.calendar-page-year .calendar-page-body {
+  font-size: 1.15rem;
+}
+
+.calculator-display {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: fit-content;
+  padding: 8px 10px;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
+}
+
+.calculator-char {
+  display: inline-block;
+  color: #39ff6a;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-shadow:
+    0 0 4px rgba(57, 255, 106, 0.85),
+    0 0 10px rgba(57, 255, 106, 0.4);
+}
+
+.seven-seg {
+  position: relative;
+  display: inline-block;
+  width: 14px;
+  height: 24px;
+  margin: 0 2px;
+}
+
+.seg {
+  position: absolute;
+  background: #123018;
+  border-radius: 1px;
+}
+
+.seg.on {
+  background: #39ff6a;
+  box-shadow:
+    0 0 4px rgba(57, 255, 106, 0.9),
+    0 0 8px rgba(57, 255, 106, 0.5);
+}
+
+.seg-a,
+.seg-g,
+.seg-d {
+  left: 2px;
+  width: 10px;
+  height: 2px;
+}
+
+.seg-a {
+  top: 0;
+}
+
+.seg-g {
+  top: 11px;
+}
+
+.seg-d {
+  top: 22px;
+}
+
+.seg-f,
+.seg-b,
+.seg-e,
+.seg-c {
+  width: 2px;
+  height: 10px;
+}
+
+.seg-f {
+  left: 0;
+  top: 1px;
+}
+
+.seg-b {
+  left: 12px;
+  top: 1px;
+}
+
+.seg-e {
+  left: 0;
+  top: 13px;
+}
+
+.seg-c {
+  left: 12px;
+  top: 13px;
 }
 
 /* History */

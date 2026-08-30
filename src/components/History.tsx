@@ -1,13 +1,18 @@
 /*
 Filename: History.tsx
-Last Edit Date: 2026-08-29 EST
-Version: 1.0
+Last Edit Date: 2026-08-30 EST
+Version: 1.1
 */
 import { useState } from 'react'
 import type { FillUp } from '../types'
 import { withMpg } from '../stats'
 import { deleteFillUp, updateFillUp } from '../storage'
 import { formatCurrency } from '../format'
+import OdometerDisplay from './OdometerDisplay'
+import GallonsDisplay from './GallonsDisplay'
+import RegisterDisplay from './RegisterDisplay'
+import CalculatorDisplay from './CalculatorDisplay'
+import CalendarDisplay from './CalendarDisplay'
 
 interface Props {
   fillUps: FillUp[]
@@ -116,28 +121,51 @@ function EditRow({
   const [gallons, setGallons] = useState(String(fillUp.gallons))
   const [totalCost, setTotalCost] = useState(String(fillUp.totalCost))
 
+  const valid =
+    odometer.trim() !== '' &&
+    !isNaN(parseFloat(odometer)) &&
+    gallons.trim() !== '' &&
+    !isNaN(parseFloat(gallons)) &&
+    totalCost.trim() !== '' &&
+    !isNaN(parseFloat(totalCost))
+
   return (
-    <div className="card history-edit">
+    <div className="card history-edit confirm-panel">
       <label>
         Date
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <CalendarDisplay value={date} onChange={setDate} />
       </label>
-      <label>
-        Odometer
-        <input type="number" inputMode="decimal" value={odometer} onChange={(e) => setOdometer(e.target.value)} />
-      </label>
-      <label>
-        Gallons
-        <input type="number" inputMode="decimal" value={gallons} onChange={(e) => setGallons(e.target.value)} />
-      </label>
-      <label>
-        Total cost ($)
-        <input type="number" inputMode="decimal" value={totalCost} onChange={(e) => setTotalCost(e.target.value)} />
-      </label>
+      <div className="review-fields">
+        <label>
+          Odometer (miles)
+          <OdometerDisplay value={odometer} onChange={setOdometer} />
+        </label>
+        <label>
+          Gallons
+          <GallonsDisplay value={gallons} onChange={setGallons} />
+        </label>
+        <label>
+          Total cost ($)
+          <RegisterDisplay value={totalCost} onChange={setTotalCost} />
+        </label>
+        <div className="confirm-price-per-gal">
+          <span className="confirm-price-per-gal-label">Price/gal</span>
+          <CalculatorDisplay
+            value={
+              gallons && totalCost
+                ? `$${(parseFloat(totalCost) / parseFloat(gallons)).toFixed(3)}`
+                : '—'
+            }
+          />
+        </div>
+      </div>
       <div className="camera-actions">
+        <button className="btn btn-secondary" disabled={saving} onClick={onCancel}>
+          Cancel
+        </button>
         <button
           className="btn btn-primary"
-          disabled={saving}
+          disabled={saving || !valid}
           onClick={() =>
             onSave({
               date,
@@ -148,9 +176,6 @@ function EditRow({
           }
         >
           {saving ? 'Saving…' : 'Save'}
-        </button>
-        <button className="btn btn-secondary" disabled={saving} onClick={onCancel}>
-          Cancel
         </button>
       </div>
     </div>
