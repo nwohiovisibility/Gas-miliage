@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
 Last Edit Date: 2026-08-29 EST
-Version: 1.1
+Version: 1.2
 */
 import type { FillUp } from '../types'
 import { computeTotals, withMpg } from '../stats'
@@ -48,6 +48,11 @@ export default function Dashboard({ fillUps }: Props) {
           label="Cost / Mile"
           value={totals.costPerMile ? `$${totals.costPerMile.toFixed(3)}` : '—'}
           accent="cost"
+        />
+        <StatCard
+          icon="⛽"
+          label="Cost / Gallon"
+          value={totals.costPerGallon ? formatCurrency(totals.costPerGallon) : '—'}
         />
         <StatCard icon="🛣️" label="Miles Tracked" value={totals.totalMiles.toLocaleString()} />
         <StatCard icon="🧾" label="Fill-Ups" value={String(totals.fillUpCount)} />

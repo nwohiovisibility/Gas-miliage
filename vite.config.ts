@@ -1,7 +1,7 @@
 /*
 Filename: vite.config.ts
 Last Edit Date: 2026-08-29 EST
-Version: 1.0
+Version: 1.1
 */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -11,11 +11,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 // Camera access (getUserMedia) requires a secure context on phones, so the
 // dev server runs over HTTPS with a self-signed cert (accept the browser
 // warning once on your phone) in addition to localhost.
-// Served from https://<user>.github.io/Gas-miliage/ in production, so
-// asset URLs and the PWA manifest need that sub-path prefix. Dev keeps
-// serving from the root so the existing phone-testing flow is unaffected.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/Gas-miliage/' : '/',
+// Served from the custom domain https://gas.nwohiovisibility.com/ in
+// production (public/CNAME), so assets are served from the root rather
+// than a GitHub Pages project sub-path.
+export default defineConfig(() => ({
+  base: '/',
   plugins: [
     react(),
     basicSsl(),

@@ -1,7 +1,7 @@
 /*
 Filename: Lock.tsx
 Last Edit Date: 2026-08-29 EST
-Version: 1.5
+Version: 1.6
 */
 import { useEffect, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
@@ -142,6 +142,12 @@ export default function Lock({ onUnlock }: Props) {
       rememberEmail(email)
       setMode('offer-passkey')
     }
+  }
+
+  function handleStartOver() {
+    setMode('idle')
+    setPassword('')
+    setError(null)
   }
 
   async function handleForgotPassword() {
@@ -307,6 +313,9 @@ export default function Lock({ onUnlock }: Props) {
               </button>
               <button className="btn-link" type="button" disabled={busy} onClick={handleForgotPassword}>
                 Forgot password?
+              </button>
+              <button className="btn-link" type="button" disabled={busy} onClick={handleStartOver}>
+                ‹ Start over
               </button>
             </form>
           )}
