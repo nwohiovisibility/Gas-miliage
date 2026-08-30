@@ -1,7 +1,7 @@
 /*
 Filename: Lock.tsx
 Last Edit Date: 2026-08-29 EST
-Version: 1.4
+Version: 1.5
 */
 import { useEffect, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
@@ -38,6 +38,24 @@ interface Props {
 
 type Mode = 'idle' | 'password' | 'enter-code' | 'set-password' | 'offer-passkey'
 
+const LAST_EMAIL_KEY = 'gas-tracker-last-email'
+
+function loadLastEmail(): string {
+  try {
+    return localStorage.getItem(LAST_EMAIL_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function rememberEmail(email: string) {
+  try {
+    localStorage.setItem(LAST_EMAIL_KEY, email)
+  } catch {
+    // private browsing or storage disabled — not worth failing over
+  }
+}
+
 function arrivedViaEmailLink() {
   return window.location.hash.includes('access_token') || new URLSearchParams(window.location.search).has('code')
 }
@@ -48,7 +66,7 @@ function arrivedViaRecoveryLink() {
 
 export default function Lock({ onUnlock }: Props) {
   const [mode, setMode] = useState<Mode>('idle')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(loadLastEmail)
   const [password, setPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [code, setCode] = useState('')
@@ -101,6 +119,7 @@ export default function Lock({ onUnlock }: Props) {
         type: 'magiclink'
       })
       if (verifyError) throw verifyError
+      rememberEmail(verified.email)
       onUnlock()
     } catch (err) {
       if (!opts?.silent) setError(err instanceof Error ? err.message : 'Could not unlock with Face ID.')
@@ -119,7 +138,10 @@ export default function Lock({ onUnlock }: Props) {
       setError(error.message)
       return
     }
-    if (data.session) setMode('offer-passkey')
+    if (data.session) {
+      rememberEmail(email)
+      setMode('offer-passkey')
+    }
   }
 
   async function handleForgotPassword() {
@@ -158,7 +180,10 @@ export default function Lock({ onUnlock }: Props) {
       setError(error.message)
       return
     }
-    if (data.session) setMode('set-password')
+    if (data.session) {
+      rememberEmail(email.trim())
+      setMode('set-password')
+    }
   }
 
   async function handleSetPassword(e: React.FormEvent) {
