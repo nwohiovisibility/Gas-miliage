@@ -1,7 +1,6 @@
 /*
 Filename: CalculatorDisplay.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.1
 */
 interface Props {
   value: string

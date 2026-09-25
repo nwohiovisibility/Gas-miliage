@@ -1,7 +1,6 @@
 /*
 Filename: CameraCapture.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.2
 */
 import { useEffect, useRef, useState } from 'react'
 

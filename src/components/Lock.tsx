@@ -1,7 +1,6 @@
 /*
 Filename: Lock.tsx
 Last Edit Date: 2026-08-29 EST
-Version: 1.6
 */
 import { useEffect, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'

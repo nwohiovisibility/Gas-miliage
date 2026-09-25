@@ -1,6 +1,5 @@
 // Filename: index.ts
 // Last Edit Date: 2026-08-29 EST
-// Version: 1.1
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { generateRegistrationOptions, verifyRegistrationResponse } from 'npm:@simplewebauthn/server@13'

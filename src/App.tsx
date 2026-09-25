@@ -1,3 +1,8 @@
+/*
+Filename: App.tsx
+Last Edit Date: 2026-09-25 EST
+Purpose: Top-level app shell: lock screen, tab navigation, data loading, and CSV export.
+*/
 import { useEffect, useState } from 'react'
 import Dashboard from './components/Dashboard'
 import History from './components/History'
@@ -7,6 +12,7 @@ import { getAllFillUps, exportAsCsv } from './storage'
 import { preloadOcr } from './ocr'
 import { supabase } from './supabaseClient'
 import type { FillUp } from './types'
+import { APP_VERSION, APP_BUILD_DATE } from './version'
 
 type Tab = 'dashboard' | 'new' | 'history'
 
@@ -101,6 +107,9 @@ export default function App() {
             )}
           </>
         )}
+        <p className="app-version">
+          Version {APP_VERSION} · {APP_BUILD_DATE}
+        </p>
       </main>
 
       <nav className="bottom-nav">

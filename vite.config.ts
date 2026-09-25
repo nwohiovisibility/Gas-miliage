@@ -1,7 +1,6 @@
 /*
 Filename: vite.config.ts
 Last Edit Date: 2026-08-29 EST
-Version: 1.1
 */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'

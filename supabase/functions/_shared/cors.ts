@@ -1,6 +1,5 @@
 // Filename: cors.ts
 // Last Edit Date: 2026-08-29 EST
-// Version: 1.0
 
 // The app is served from localhost during dev and from GitHub Pages in
 // production, so the allowed origin is whatever actually made the request

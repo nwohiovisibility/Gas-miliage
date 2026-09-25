@@ -1,7 +1,6 @@
 /*
 Filename: NewFillUp.tsx
 Last Edit Date: 2026-08-30 EST
-Version: 1.15
 */
 import { useState } from 'react'
 import CameraCapture from './CameraCapture'

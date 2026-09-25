@@ -1,7 +1,6 @@
 /*
 Filename: LineChart.tsx
 Last Edit Date: 2026-08-29 EST
-Version: 1.0
 */
 import { useId, useRef, useState } from 'react'
 

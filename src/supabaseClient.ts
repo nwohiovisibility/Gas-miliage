@@ -1,7 +1,6 @@
 /*
 Filename: supabaseClient.ts
 Last Edit Date: 2026-08-29 EST
-Version: 1.1
 */
 import { createClient } from '@supabase/supabase-js'
 
