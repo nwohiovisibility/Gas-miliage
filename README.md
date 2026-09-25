@@ -1,8 +1,13 @@
+<!--
+Filename: README.md
+Last Edit Date: 2026-09-25 EST
+Purpose: Setup, usage, and deployment notes for the Gas Mileage Tracker.
+-->
+
 # Gas Mileage Tracker
 
-A phone-installable web app (PWA) that scans your odometer and gas pump display
-with your camera, does the text recognition entirely on-device, and tracks
-fuel cost and MPG over time. Fill-up data is stored in Supabase.
+A phone-installable web app (PWA) for logging fill-ups (odometer, gallons,
+total cost) and tracking fuel cost and MPG over time. Fill-up data is stored in Supabase.
 
 ## Set up Supabase
 
@@ -77,7 +82,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    phone and computer must be on the same Wi-Fi network.
 3. Open that URL in your phone's browser. The cert is self-signed, so you'll
    see a security warning the first time — tap through it ("Advanced" →
-   "Proceed", or "Visit site"). This is required for camera access to work.
+   "Proceed", or "Visit site"). This is required for passkeys to work.
 4. Add it to your home screen (Share → "Add to Home Screen" on iOS, or the
    browser menu → "Install app" on Android) so it behaves like a real app.
 
@@ -97,10 +102,8 @@ whichever origin you didn't set the passkey up on.
   first time on a new device, use "Use password instead" and then set up
   a passkey when prompted. Tap the 🔒 in the header any time to sign out
   and re-lock.
-- **New Fill-Up**: scan your odometer, confirm/correct the reading, scan the
-  pump display, confirm/correct gallons and total cost, then save.
-- OCR is a best-effort guess — every extracted number is shown in an editable
-  field before you save, so a misread digit is easy to fix.
+- **New Fill-Up**: enter your odometer reading, then gallons (to 3 decimals,
+  as the pump shows) and total cost, confirm the date, and save.
 - **Dashboard**: total spent, total gallons, average MPG, cost per mile, and
   MPG/cost trend charts.
 - **History**: every fill-up, editable or deletable, with per-fill-up MPG.
@@ -134,10 +137,6 @@ future push to `main` redeploys it.
 ## Tech notes
 
 - React + TypeScript + Vite, built as an installable PWA (`vite-plugin-pwa`).
-- Camera capture uses `getUserMedia` with a file-input fallback.
-- OCR runs fully client-side via `tesseract.js` (WebAssembly); its language
-  data is fetched from a CDN on first use and cached by the service worker
-  for offline use afterward.
 - Fill-up data is read/written via `@supabase/supabase-js`. Access is
   gated by Supabase Auth (a single account, no public sign-up) plus Row
   Level Security, so the anon key alone can't read or write anything —

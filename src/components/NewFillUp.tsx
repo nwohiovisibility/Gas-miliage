@@ -1,18 +1,17 @@
 /*
 Filename: NewFillUp.tsx
-Last Edit Date: 2026-08-30 EST
+Last Edit Date: 2026-09-25 EST
+Purpose: Three-step manual entry for a new fill-up: odometer, pump amounts, then confirm and save.
 */
 import { useState } from 'react'
-import CameraCapture from './CameraCapture'
 import OdometerDisplay from './OdometerDisplay'
 import RegisterDisplay from './RegisterDisplay'
 import GallonsDisplay from './GallonsDisplay'
 import CalculatorDisplay from './CalculatorDisplay'
 import CalendarDisplay from './CalendarDisplay'
-import { parseOdometerGuess, parsePumpGuess, recognizeText } from '../ocr'
 import { addFillUp } from '../storage'
 
-type Step = 'odometer' | 'odometer-review' | 'pump' | 'pump-review' | 'confirm'
+type Step = 'odometer' | 'pump' | 'confirm'
 
 interface Props {
   onDone: () => void
@@ -20,68 +19,14 @@ interface Props {
 
 export default function NewFillUp({ onDone }: Props) {
   const [step, setStep] = useState<Step>('odometer')
-  const [scanning, setScanning] = useState(false)
-  const [scanError, setScanError] = useState<string | null>(null)
 
-  const [odometerPhoto, setOdometerPhoto] = useState<string | null>(null)
   const [odometer, setOdometer] = useState('')
-
-  const [pumpPhoto, setPumpPhoto] = useState<string | null>(null)
   const [gallons, setGallons] = useState('')
   const [totalCost, setTotalCost] = useState('')
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-
-  async function handleOdometerCapture(dataUrl: string) {
-    setOdometerPhoto(dataUrl)
-    setScanning(true)
-    setScanError(null)
-    try {
-      const text = await recognizeText(dataUrl)
-      const guess = parseOdometerGuess(text)
-      setOdometer(guess ?? '')
-      if (!guess) setScanError("Couldn't read a number automatically — enter it manually below.")
-    } catch {
-      setScanError('OCR failed — enter the reading manually below.')
-    } finally {
-      setScanning(false)
-      setStep('odometer-review')
-    }
-  }
-
-  function handleSkipOdometer() {
-    setOdometerPhoto(null)
-    setScanError(null)
-    setStep('odometer-review')
-  }
-
-  function handleSkipPump() {
-    setPumpPhoto(null)
-    setScanError(null)
-    setStep('pump-review')
-  }
-
-  async function handlePumpCapture(dataUrl: string) {
-    setPumpPhoto(dataUrl)
-    setScanning(true)
-    setScanError(null)
-    try {
-      const text = await recognizeText(dataUrl)
-      const guess = parsePumpGuess(text)
-      setGallons(guess.gallons ?? '')
-      setTotalCost(guess.totalCost ?? '')
-      if (!guess.gallons && !guess.totalCost) {
-        setScanError("Couldn't read the pump display automatically — enter values manually below.")
-      }
-    } catch {
-      setScanError('OCR failed — enter values manually below.')
-    } finally {
-      setScanning(false)
-      setStep('pump-review')
-    }
-  }
 
   async function save() {
     setSaving(true)
@@ -110,42 +55,19 @@ export default function NewFillUp({ onDone }: Props) {
       <StepIndicator step={step} />
 
       {step === 'odometer' && (
-        <CameraCapture
-          label="Step 1 — Scan your odometer"
-          onCapture={handleOdometerCapture}
-          onSkip={handleSkipOdometer}
-          onBack={onDone}
-        />
-      )}
-
-      {step === 'odometer-review' && (
-        <ReviewPanel
-          photo={odometerPhoto}
-          scanning={scanning}
-          error={scanError}
-          onRetake={() => setStep('odometer')}
-        >
+        <EntryPanel backLabel="Cancel" onBack={onDone}>
           <label>
             Odometer reading (miles)
             <OdometerDisplay value={odometer} onChange={setOdometer} autoFocus />
           </label>
           <button className="btn btn-primary" disabled={!odometerValid} onClick={() => setStep('pump')}>
-            Next: scan pump →
+            Next: pump →
           </button>
-        </ReviewPanel>
+        </EntryPanel>
       )}
 
       {step === 'pump' && (
-        <CameraCapture
-          label="Step 2 — Scan the pump display"
-          onCapture={handlePumpCapture}
-          onSkip={handleSkipPump}
-          onBack={() => setStep('odometer-review')}
-        />
-      )}
-
-      {step === 'pump-review' && (
-        <ReviewPanel photo={pumpPhoto} scanning={scanning} error={scanError} onRetake={() => setStep('pump')}>
+        <EntryPanel backLabel="‹ Back" onBack={() => setStep('odometer')}>
           <label>
             Gallons
             <GallonsDisplay value={gallons} onChange={setGallons} />
@@ -157,7 +79,7 @@ export default function NewFillUp({ onDone }: Props) {
           <button className="btn btn-primary" disabled={!pumpValid} onClick={() => setStep('confirm')}>
             Next: confirm →
           </button>
-        </ReviewPanel>
+        </EntryPanel>
       )}
 
       {step === 'confirm' && (
@@ -193,7 +115,7 @@ export default function NewFillUp({ onDone }: Props) {
           </div>
           {saveError && <p className="scan-warning">{saveError}</p>}
           <div className="camera-actions">
-            <button className="btn btn-secondary" disabled={saving} onClick={() => setStep('pump-review')}>
+            <button className="btn btn-secondary" disabled={saving} onClick={() => setStep('pump')}>
               ‹ Back
             </button>
             <button
@@ -211,8 +133,7 @@ export default function NewFillUp({ onDone }: Props) {
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const index = ['odometer', 'odometer-review', 'pump', 'pump-review', 'confirm'].indexOf(step)
-  const stepNum = index < 2 ? 1 : index < 4 ? 2 : 3
+  const stepNum = ['odometer', 'pump', 'confirm'].indexOf(step) + 1
   return (
     <div className="step-indicator">
       {[1, 2, 3].map((n) => (
@@ -222,34 +143,23 @@ function StepIndicator({ step }: { step: Step }) {
   )
 }
 
-function ReviewPanel({
-  photo,
-  scanning,
-  error,
-  onRetake,
+function EntryPanel({
+  backLabel,
+  onBack,
   children
 }: {
-  photo: string | null
-  scanning: boolean
-  error: string | null
-  onRetake: () => void
+  backLabel: string
+  onBack: () => void
   children: React.ReactNode
 }) {
   return (
     <div className="card review-panel">
-      {photo && <img src={photo} alt="captured" className="review-photo" />}
-      {scanning && <p className="scanning-indicator">🔎 Reading text from photo…</p>}
-      {!scanning && error && <p className="scan-warning">{error}</p>}
-      {!scanning && (
-        <>
-          <div className="review-fields">{children}</div>
-          <div className="camera-actions">
-            <button className="btn btn-secondary" onClick={onRetake}>
-              {photo ? 'Retake photo' : '‹ Back'}
-            </button>
-          </div>
-        </>
-      )}
+      <div className="review-fields">{children}</div>
+      <div className="camera-actions">
+        <button className="btn btn-secondary" onClick={onBack}>
+          {backLabel}
+        </button>
+      </div>
     </div>
   )
 }

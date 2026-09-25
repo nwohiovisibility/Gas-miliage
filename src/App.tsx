@@ -9,7 +9,6 @@ import History from './components/History'
 import NewFillUp from './components/NewFillUp'
 import Lock from './components/Lock'
 import { getAllFillUps, exportAsCsv } from './storage'
-import { preloadOcr } from './ocr'
 import { supabase } from './supabaseClient'
 import type { FillUp } from './types'
 import { APP_VERSION } from './version'
@@ -25,7 +24,6 @@ export default function App() {
 
   useEffect(() => {
     if (!unlocked) return
-    preloadOcr()
     refresh()
   }, [unlocked])
 
