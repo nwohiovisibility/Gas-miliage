@@ -399,26 +399,6 @@ a:focus-visible {
 }
 
 /* New fill-up flow */
-.step-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.step-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.step-dot-active {
-  background: var(--accent);
-  transform: scale(1.2);
-}
-
 .scan-warning {
   color: var(--accent-text);
   font-size: 0.85rem;
