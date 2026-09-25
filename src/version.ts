@@ -1,7 +1,7 @@
 /*
 Filename: version.ts
 Last Edit Date: 2026-09-25 EST
-Purpose: The repo's single release version number.
+Purpose: The repo's single release version number, shown in the header after the app title.
 */
 
 // The one version number for the whole app -- files don't carry their own.

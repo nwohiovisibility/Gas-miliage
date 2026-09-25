@@ -1,3 +1,8 @@
+/*
+Filename: App.tsx
+Last Edit Date: 2026-09-25 EST
+Purpose: Top-level app shell: lock screen, tab navigation, data loading, and CSV export.
+*/
 import { useEffect, useState } from 'react'
 import Dashboard from './components/Dashboard'
 import History from './components/History'
@@ -7,6 +12,7 @@ import { getAllFillUps, exportAsCsv } from './storage'
 import { preloadOcr } from './ocr'
 import { supabase } from './supabaseClient'
 import type { FillUp } from './types'
+import { APP_VERSION } from './version'
 
 type Tab = 'dashboard' | 'new' | 'history'
 
@@ -60,7 +66,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>⛽ Gas Tracker</h1>
+        <h1>
+          ⛽ Gas Tracker <span className="app-version">version {APP_VERSION}</span>
+        </h1>
         <div className="app-header-actions">
           {tab !== 'new' && fillUps.length > 0 && (
             <button className="btn-link" onClick={handleExport}>
