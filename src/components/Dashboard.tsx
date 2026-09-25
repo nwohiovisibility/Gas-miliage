@@ -1,6 +1,7 @@
 /*
 Filename: Dashboard.tsx
-Last Edit Date: 2026-08-30 EST
+Last Edit Date: 2026-09-25 EST
+Purpose: Summary stat cards and MPG/cost charts, with drill-down detail per stat.
 */
 import { useState } from 'react'
 import type { FillUp } from '../types'
@@ -65,7 +66,7 @@ export default function Dashboard({ fillUps }: Props) {
           onClick={() =>
             setDetail({
               title: 'Total Gallons — per fill-up',
-              rows: rowsNewestFirst.map((r) => ({ date: r.date, value: `${r.gallons.toFixed(2)} gal` }))
+              rows: rowsNewestFirst.map((r) => ({ date: r.date, value: `${r.gallons.toFixed(3)} gal` }))
             })
           }
         />
@@ -120,7 +121,7 @@ export default function Dashboard({ fillUps }: Props) {
               title: 'Fill-Ups',
               rows: rowsNewestFirst.map((r) => ({
                 date: r.date,
-                value: `${r.gallons.toFixed(2)} gal · ${formatCurrency(r.totalCost)}`
+                value: `${r.gallons.toFixed(3)} gal · ${formatCurrency(r.totalCost)}`
               }))
             })
           }

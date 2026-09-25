@@ -1,6 +1,7 @@
 /*
 Filename: GallonsDisplay.tsx
-Last Edit Date: 2026-08-30 EST
+Last Edit Date: 2026-09-25 EST
+Purpose: Pump-style gallons entry showing three decimal places, like the pump display.
 */
 interface Props {
   value: string
@@ -10,7 +11,7 @@ interface Props {
 export default function GallonsDisplay({ value, onChange }: Props) {
   const amount = parseFloat(value)
   const isEmpty = value.trim() === '' || isNaN(amount)
-  const chars = (isEmpty ? 0 : amount).toFixed(2).split('')
+  const chars = (isEmpty ? 0 : amount).toFixed(3).split('')
 
   return (
     <div className="gallons-field">
@@ -30,6 +31,7 @@ export default function GallonsDisplay({ value, onChange }: Props) {
       </div>
       <input
         type="number"
+        step="any"
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}

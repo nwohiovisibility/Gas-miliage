@@ -1,6 +1,7 @@
 /*
 Filename: History.tsx
-Last Edit Date: 2026-08-30 EST
+Last Edit Date: 2026-09-25 EST
+Purpose: Fill-up history list with inline editing and deletion.
 */
 import { useState } from 'react'
 import type { FillUp } from '../types'
@@ -80,7 +81,7 @@ export default function History({ fillUps, onChange }: Props) {
               <div className="history-odo">{row.odometer.toLocaleString()} mi</div>
             </div>
             <div className="history-details">
-              <span>{row.gallons.toFixed(2)} gal</span>
+              <span>{row.gallons.toFixed(3)} gal</span>
               <span>{formatCurrency(row.totalCost)}</span>
               <span>${row.pricePerGallon.toFixed(3)}/gal</span>
               {row.mpg !== undefined && <span className="history-mpg">{row.mpg.toFixed(1)} mpg</span>}
