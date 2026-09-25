@@ -11,7 +11,6 @@ import Lock from './components/Lock'
 import { getAllFillUps, exportAsCsv } from './storage'
 import { supabase } from './supabaseClient'
 import type { FillUp } from './types'
-import { APP_VERSION } from './version'
 
 type Tab = 'dashboard' | 'new' | 'history'
 
@@ -65,7 +64,8 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>
-          ⛽ Gas Tracker <span className="app-version">version {APP_VERSION}</span>
+          ⛽ Gas Tracker{' '}
+          {window.APP_VERSION && <span className="app-version">version {window.APP_VERSION}</span>}
         </h1>
         <div className="app-header-actions">
           {tab !== 'new' && fillUps.length > 0 && (

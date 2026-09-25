@@ -1,3 +1,8 @@
+<!--
+Filename: index.html
+Last Edit Date: 2026-09-25 EST
+Purpose: HTML shell that loads the version file and the React app.
+-->
 <!doctype html>
 <html lang="en">
   <head>
@@ -13,6 +18,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Sets window.APP_VERSION before the app starts (public/app-version.js). -->
+    <script src="/app-version.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
