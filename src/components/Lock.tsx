@@ -227,7 +227,12 @@ export default function Lock({ onUnlock }: Props) {
       <span className="lock-icon">🔒</span>
       <h2>
         Gas Tracker is locked{' '}
-        {window.APP_VERSION && <span className="app-version">version {window.APP_VERSION}</span>}
+        {window.APP_VERSION && (
+          <span className="app-version">
+            version {window.APP_VERSION}
+            {window.APP_BUILD_DATE && ` (${window.APP_BUILD_DATE})`}
+          </span>
+        )}
       </h2>
 
       {mode === 'enter-code' && (
