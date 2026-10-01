@@ -1,6 +1,7 @@
 /*
 Filename: Lock.tsx
-Last Edit Date: 2026-08-29 EST
+Last Edit Date: 2026-10-01 EST
+Purpose: Lock screen — password/passkey sign-in, password recovery, and passkey setup.
 */
 import { useEffect, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
@@ -224,7 +225,10 @@ export default function Lock({ onUnlock }: Props) {
   return (
     <div className="lock-screen">
       <span className="lock-icon">🔒</span>
-      <h2>Gas Tracker is locked</h2>
+      <h2>
+        Gas Tracker is locked{' '}
+        {window.APP_VERSION && <span className="app-version">version {window.APP_VERSION}</span>}
+      </h2>
 
       {mode === 'enter-code' && (
         <form className="lock-password-form" onSubmit={handleVerifyCode}>

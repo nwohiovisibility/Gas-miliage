@@ -7,5 +7,5 @@ Purpose: The app's overall release version, shown in the header after the app ti
 // The one version number for the whole app -- files don't carry their own.
 // Bump APP_VERSION (+0.01 fix, +0.10 feature) and set APP_BUILD_DATE once per
 // release (each merge to main, which deploys automatically).
-window.APP_VERSION = "1.12";
+window.APP_VERSION = "1.13";
 window.APP_BUILD_DATE = "2026-10-01";
