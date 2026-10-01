@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
-Last Edit Date: 2026-09-25 EST
-Purpose: Summary stat cards and MPG/cost charts, with drill-down detail per stat.
+Last Edit Date: 2026-10-01 EST
+Purpose: Summary stat cards and MPG/cost-per-gallon charts, with drill-down detail per stat.
 */
 import { useState } from 'react'
 import type { FillUp } from '../types'
@@ -29,7 +29,7 @@ export default function Dashboard({ fillUps }: Props) {
     .filter((r) => r.mpg !== undefined)
     .map((r) => ({ x: shortDate(r.date), y: r.mpg as number }))
 
-  const costPoints = rows.map((r) => ({ x: shortDate(r.date), y: r.totalCost }))
+  const pricePerGallonPoints = rows.map((r) => ({ x: shortDate(r.date), y: r.pricePerGallon }))
 
   if (fillUps.length === 0) {
     return (
@@ -134,8 +134,12 @@ export default function Dashboard({ fillUps }: Props) {
       </section>
 
       <section className="card">
-        <h3>Cost per fill-up</h3>
-        <LineChart points={costPoints} color="var(--cost-color)" formatValue={formatCurrency} />
+        <h3>Cost per gallon</h3>
+        <LineChart
+          points={pricePerGallonPoints}
+          color="var(--cost-color)"
+          formatValue={(v) => `$${v.toFixed(3)}/gal`}
+        />
       </section>
     </div>
   )
