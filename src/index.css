@@ -1,6 +1,6 @@
 /*
 Filename: index.css
-Last Edit Date: 2026-09-25 EST
+Last Edit Date: 2026-10-08 EST
 */
 :root {
   color-scheme: light dark;
@@ -173,6 +173,13 @@ a:focus-visible {
   padding: 16px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-card);
+}
+
+.card-title-btn {
+  all: unset;
+  display: block;
+  width: 100%;
+  cursor: pointer;
 }
 
 .card h3 {

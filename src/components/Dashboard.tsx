@@ -1,7 +1,7 @@
 /*
 Filename: Dashboard.tsx
-Last Edit Date: 2026-10-01 EST
-Purpose: Summary stat cards and MPG/cost-per-gallon charts, with drill-down detail per stat.
+Last Edit Date: 2026-10-08 EST
+Purpose: Summary stat cards and MPG/cost-per-gallon charts, with drill-down detail per stat and per chart.
 */
 import { useState } from 'react'
 import type { FillUp } from '../types'
@@ -129,12 +129,34 @@ export default function Dashboard({ fillUps }: Props) {
       </div>
 
       <section className="card">
-        <h3>MPG over time</h3>
+        <button
+          className="card-title-btn"
+          onClick={() =>
+            setDetail({
+              title: 'MPG — per fill-up',
+              rows: rowsNewestFirst
+                .filter((r) => r.mpg !== undefined)
+                .map((r) => ({ date: r.date, value: `${(r.mpg as number).toFixed(1)} mpg` }))
+            })
+          }
+        >
+          <h3>MPG over time ›</h3>
+        </button>
         <LineChart points={mpgPoints} color="var(--mpg-color)" formatValue={(v) => `${v.toFixed(1)} mpg`} />
       </section>
 
       <section className="card">
-        <h3>Cost per gallon</h3>
+        <button
+          className="card-title-btn"
+          onClick={() =>
+            setDetail({
+              title: 'Cost / Gallon — per fill-up',
+              rows: rowsNewestFirst.map((r) => ({ date: r.date, value: `$${r.pricePerGallon.toFixed(3)}/gal` }))
+            })
+          }
+        >
+          <h3>Cost per gallon ›</h3>
+        </button>
         <LineChart
           points={pricePerGallonPoints}
           color="var(--cost-color)"
