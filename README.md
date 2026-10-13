@@ -37,7 +37,7 @@ use), create your one account directly in the dashboard:
 password; this is your fallback sign-in if you ever lose your
 passkey/device.
 
-Then, **Authentication → Settings**, turn **off** "Allow new users to
+Then, **Authentication → Sign In / Providers → User Signups**, turn **off** "Allow new users to
 sign up", unless another app in the same project needs public sign-up
 (the setting is project-wide).
 
