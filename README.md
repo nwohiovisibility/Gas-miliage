@@ -1,6 +1,6 @@
 <!--
 Filename: README.md
-Last Edit Date: 2026-09-25 EST
+Last Edit Date: 2026-10-13 EST
 Purpose: Setup, usage, and deployment notes for the Gas Mileage Tracker.
 -->
 
@@ -11,65 +11,73 @@ total cost) and tracking fuel cost and MPG over time. Fill-up data is stored in 
 
 ## Set up Supabase
 
-This app uses its own schema (`gas_tracker`) rather than the default
-`public` one, so it's the only thing in it. Data is locked to your one
-account via Row Level Security (RLS) — the anon key alone can't read or
-write anything.
+The app lives in the shared personal Supabase project (**Tools**, in the
+Ghostwolf Tools org), alongside the reminders app. It uses its own schema
+(`gas_tracker`) rather than `public`, so it stays separate from anything
+else in that project. Data is locked to your one account via Row Level
+Security (RLS): the publishable/anon key alone can't read or write
+anything, even though that key is visible in the deployed page.
 
-### 1. Create your account
+### 1. Create the tables and Edge Functions
+
+- Run [`sql/schema.sql`](sql/schema.sql) once in the project's SQL editor
+  (fill-ups table plus the two passkey tables).
+- Deploy the two Face ID functions from this repo:
+  `supabase functions deploy gas-passkey-login --no-verify-jwt` and
+  `supabase functions deploy gas-passkey-register` (JWT check stays on).
+- In **Project Settings → Data API**, add `gas_tracker` to **Exposed
+  schemas** (it only lists `public` by default; the app and the functions
+  can't reach the tables until you add it).
+
+### 2. Create your account
 
 Rather than a public sign-up form (which anyone hitting the URL could
 use), create your one account directly in the dashboard:
 **Authentication → Users → Add user**. Use a real email and a strong
-password — this becomes your fallback sign-in if you ever lose access to
-your passkey/device. Copy the user's **UUID** shown in the table; you
-need it below.
+password; this is your fallback sign-in if you ever lose your
+passkey/device.
 
-Then, **Authentication → Settings**, turn **off** "Allow new users to
-sign up" — nobody else should be able to create an account.
+Then, **Authentication → Sign In / Providers → User Signups**, turn **off** "Allow new users to
+sign up", unless another app in the same project needs public sign-up
+(the setting is project-wide).
 
-### 2. Create the table
+Under **Authentication → URL Configuration**, add
+`https://gas.ghostwolftools.com` (and `https://localhost:5173` for local
+dev, plus the `*.workers.dev` address while testing) to **Redirect URLs**;
+otherwise auth emails fall back to the Site URL.
 
-Open the appropriate file in [`sql/`](sql/), replace `YOUR-USER-UUID`
-with the UUID from step 1, then copy **only the SQL statements** (not
-this README) into the Supabase SQL editor and run it:
+Under **Authentication → Emails → Templates → Reset Password**, make the
+email show the 6-digit code (the app asks for the code, not the link;
+see `handleForgotPassword` in `src/components/Lock.tsx`), e.g.:
+```html
+<h2>Reset your password</h2>
+<p>Enter this code in the app:</p>
+<p style="font-size:24px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
+<p>If you didn't ask for this, ignore this email.</p>
+```
+Keep **Email OTP Length** (Sign In / Providers → Email) at 6 to match the
+app's code box.
 
-- [`sql/schema.sql`](sql/schema.sql) — fresh install, `gas_tracker.fill_ups`
-  doesn't exist yet.
-- `sql/migrate-existing-table.sql` — only if you already created the table
-  before Face ID/account login was added (no `user_id`/RLS yet). This one
-  is gitignored locally once you fill in your real UUID, so it won't show
-  up if you clone this repo elsewhere or look at it on GitHub.
+### 3. Copy over existing fill-ups (one time)
 
-In **Project Settings → Data API**, add `gas_tracker` to **Exposed
-schemas** (it only lists `public` by default — the table is
-unreachable from the app until you add it here).
-
-### 3. Turn on Face ID / Touch ID / Windows Hello unlock
-
-**Authentication → Passkeys** → enable **Passkey authentication**. Fill
-in:
-- **RP Display Name**: anything, e.g. `Gas Tracker`
-- **RP ID**: your bare domain, e.g. `your-username.github.io` (no
-  `https://`, no path)
-- **RP Origins**: `https://your-username.github.io`
-
-The dashboard usually pre-fills these from your project's Site URL —
-double check the RP ID matches wherever you deploy the app (see
-"Deploying for real use" below), since a passkey only works on the
-origin it was registered for.
+[`sql/copy-fill-ups.sql`](sql/copy-fill-ups.sql) moves fill-ups from the
+old project: run step 1 in the old project, then paste its output into
+the new project with your email filled in. Passkeys don't carry over
+(they're tied to the old domain); set up Face ID again after your first
+password sign-in on the new site.
 
 ### 4. Get your API keys and `.env`
 
-In **Project Settings → API**, copy the **Project URL** and the
-**anon public** key (also called the "publishable" key in newer
-projects). In this folder, copy `.env.example` to `.env` and fill in
-those two values:
+In **Project Settings → API Keys**, copy the **Project URL** and the
+**publishable** key (`sb_publishable_...`; the legacy anon key also
+works). In this folder, copy `.env.example` to `.env` and fill in those
+two values:
 ```
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_ANON_KEY=your-publishable-key
 ```
-`.env` is gitignored, so these stay out of source control.
+`.env` is gitignored, so these stay out of source control. The deployed
+build gets the same two values from Cloudflare build variables (below).
 
 ## Run it on your phone
 
@@ -92,7 +100,7 @@ this way. For a version that works without your computer being on, see
 
 Passkeys are tied to the domain they were registered on, so Face ID won't
 work against this local dev URL if you registered it on the deployed
-GitHub Pages site (or vice versa) — use "Use password instead" on
+site (or vice versa) — use "Use password instead" on
 whichever origin you didn't set the passkey up on.
 
 ## Using it
@@ -114,34 +122,42 @@ whichever origin you didn't set the passkey up on.
 
 ## Deploying for real use
 
-Running `npm run dev` from your computer works for testing, but for
-day-to-day use you'll want the app hosted somewhere with a real HTTPS
-address, so it works from anywhere and doesn't depend on your computer being
-on. This repo deploys to **GitHub Pages** via the included workflow
-(`.github/workflows/deploy.yml`):
+The app is hosted on **Cloudflare Workers** (static assets) at
+`https://gas.ghostwolftools.com`. Every push to `main` builds and deploys
+it. `wrangler.jsonc` tells Cloudflare to serve the built `dist/` folder.
 
-1. In the repo on GitHub: **Settings → Secrets and variables → Actions →
-   New repository secret**. Add `VITE_SUPABASE_URL` and
-   `VITE_SUPABASE_ANON_KEY` with the same values from your local `.env` —
-   the build needs them to bake the Supabase connection into the static
-   files (GitHub Pages can't read a `.env` file at request time).
-2. **Settings → Pages → Build and deployment → Source**, set to
-   **GitHub Actions**.
-3. Push to `main`. The workflow builds and deploys automatically — check
-   the **Actions** tab for progress, and the deployed URL afterward
-   (`https://<your-username>.github.io/Gas-miliage/`).
+One-time setup, in the personal Cloudflare account:
 
-Open that URL once on your phone and "Add to Home Screen" as above. Every
-future push to `main` redeploys it.
+1. **Workers & Pages → Create → Import a repository**, pick
+   `nwohiovisibility/Gas-miliage`.
+2. Project name `gas-miliage`, production branch `main`.
+   **Build command**: `npm run build`. **Deploy command**: leave the
+   default `npx wrangler deploy`. (Cloudflare installs dependencies
+   itself, and it ignores a build command written in `wrangler.jsonc`, so
+   it has to be set here.)
+3. Under **Build variables** (Settings → Build → Variables and secrets),
+   add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with the same
+   values as your `.env`. Vite bakes them into the build, so they must be
+   *build* variables, not runtime ones.
+4. Save and deploy, then check the `*.workers.dev` URL works.
+5. Custom domain: **the Worker → Settings → Domains & Routes → Add →
+   Custom domain**, enter `gas.ghostwolftools.com`. This needs
+   `ghostwolftools.com` to be a zone in the same Cloudflare account
+   (nameservers pointed at Cloudflare); Cloudflare then creates the DNS
+   record and certificate itself.
+
+Open the site once on your phone and "Add to Home Screen" as above.
 
 ## Tech notes
 
 - React + TypeScript + Vite, built as an installable PWA (`vite-plugin-pwa`).
 - Fill-up data is read/written via `@supabase/supabase-js`. Access is
   gated by Supabase Auth (a single account, no public sign-up) plus Row
-  Level Security, so the anon key alone can't read or write anything —
-  see "Set up Supabase" above. Face ID/Touch ID/Windows Hello unlock uses
-  Supabase's (beta) native passkey support.
-- Deployed via GitHub Actions to GitHub Pages at the `/Gas-miliage/`
-  sub-path (`vite.config.ts` sets `base` accordingly for production
-  builds only — local dev still serves from `/`).
+  Level Security, so the publishable key alone can't read or write
+  anything. See "Set up Supabase" above.
+- Face ID/Touch ID/Windows Hello unlock uses this repo's own Edge
+  Functions (`supabase/functions/gas-passkey-*`) and the
+  `gas_tracker.passkey_*` tables. A passkey only works on the domain it
+  was set up on.
+- Hosted on Cloudflare Workers static assets from the site root
+  (`vite.config.ts` uses `base: '/'`).

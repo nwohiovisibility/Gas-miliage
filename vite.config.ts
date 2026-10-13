@@ -1,6 +1,6 @@
 /*
 Filename: vite.config.ts
-Last Edit Date: 2026-09-25 EST
+Last Edit Date: 2026-10-13 EST
 Purpose: Vite build config: React, HTTPS dev server, and PWA manifest/service worker.
 */
 import { defineConfig } from 'vite'
@@ -11,9 +11,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // Passkeys (WebAuthn) require a secure context on phones, so the dev server
 // runs over HTTPS with a self-signed cert (accept the browser warning once
 // on your phone) in addition to localhost.
-// Served from the custom domain https://gas.nwohiovisibility.com/ in
-// production (public/CNAME), so assets are served from the root rather
-// than a GitHub Pages project sub-path.
+// Served from the root of https://gas.ghostwolftools.com/ in production
+// (Cloudflare Workers static assets, see wrangler.jsonc).
 export default defineConfig(() => ({
   base: '/',
   plugins: [
