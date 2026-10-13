@@ -43,7 +43,20 @@ sign up", unless another app in the same project needs public sign-up
 
 Under **Authentication → URL Configuration**, add
 `https://gas.ghostwolftools.com` (and `https://localhost:5173` for local
-dev) to **Redirect URLs**, so password-reset emails can return to the app.
+dev, plus the `*.workers.dev` address while testing) to **Redirect URLs**;
+otherwise auth emails fall back to the Site URL.
+
+Under **Authentication → Emails → Templates → Reset Password**, make the
+email show the 6-digit code (the app asks for the code, not the link;
+see `handleForgotPassword` in `src/components/Lock.tsx`), e.g.:
+```html
+<h2>Reset your password</h2>
+<p>Enter this code in the app:</p>
+<p style="font-size:24px;font-weight:bold;letter-spacing:4px">{{ .Token }}</p>
+<p>If you didn't ask for this, ignore this email.</p>
+```
+Keep **Email OTP Length** (Sign In / Providers → Email) at 6 to match the
+app's code box.
 
 ### 3. Copy over existing fill-ups (one time)
 
