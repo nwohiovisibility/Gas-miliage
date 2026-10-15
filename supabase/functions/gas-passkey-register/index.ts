@@ -1,5 +1,6 @@
 // Filename: index.ts
-// Last Edit Date: 2026-08-29 EST
+// Last Edit Date: 2026-10-15 EST
+// Purpose: Register owner passkeys for the Gas Mileage app.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { generateRegistrationOptions, verifyRegistrationResponse } from 'npm:@simplewebauthn/server@13'
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
 
     const options = await generateRegistrationOptions({
-      rpName: 'Gas Tracker',
+      rpName: 'Gas Mileage',
       rpID,
       userName: user.email,
       userDisplayName: user.email,

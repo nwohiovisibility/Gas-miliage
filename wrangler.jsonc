@@ -1,9 +1,10 @@
 // Filename: wrangler.jsonc
-// Last Edit Date: 2026-10-13 EST
+// Last Edit Date: 2026-10-15 EST
 // Purpose: Cloudflare Workers config: serves the built app (dist/) as static assets.
 {
-  "name": "gas-miliage",
+  "name": "gas-mileage",
   "compatibility_date": "2026-10-01",
+  "previews": {},
   // Vite builds into dist/. Workers Builds ignores a "build" command here,
   // so set the dashboard's Build command to `npm run build` (see README.md).
   "assets": {
