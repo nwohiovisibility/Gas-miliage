@@ -1,6 +1,6 @@
 /*
 Filename: Lock.tsx
-Last Edit Date: 2026-10-01 EST
+Last Edit Date: 2026-10-15 EST
 Purpose: Lock screen — password/passkey sign-in, password recovery, and passkey setup.
 */
 import { useEffect, useState } from 'react'
@@ -226,7 +226,7 @@ export default function Lock({ onUnlock }: Props) {
     <div className="lock-screen">
       <span className="lock-icon">🔒</span>
       <h2>
-        Gas Tracker is locked{' '}
+        Gas Mileage is locked{' '}
         {window.APP_VERSION && (
           <span className="app-version">
             version {window.APP_VERSION}

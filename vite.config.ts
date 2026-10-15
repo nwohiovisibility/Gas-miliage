@@ -1,6 +1,6 @@
 /*
 Filename: vite.config.ts
-Last Edit Date: 2026-10-13 EST
+Last Edit Date: 2026-10-15 EST
 Purpose: Vite build config: React, HTTPS dev server, and PWA manifest/service worker.
 */
 import { defineConfig } from 'vite'
@@ -23,7 +23,7 @@ export default defineConfig(() => ({
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'Gas Mileage Tracker',
-        short_name: 'Gas Tracker',
+        short_name: 'Gas Mileage',
         description: 'Log your fill-ups to track fuel cost and MPG over time.',
         theme_color: '#0f172a',
         background_color: '#0f172a',

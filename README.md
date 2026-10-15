@@ -1,6 +1,6 @@
 <!--
 Filename: README.md
-Last Edit Date: 2026-10-13 EST
+Last Edit Date: 2026-10-15 EST
 Purpose: Setup, usage, and deployment notes for the Gas Mileage Tracker.
 -->
 
@@ -129,8 +129,8 @@ it. `wrangler.jsonc` tells Cloudflare to serve the built `dist/` folder.
 One-time setup, in the personal Cloudflare account:
 
 1. **Workers & Pages → Create → Import a repository**, pick
-   `nwohiovisibility/Gas-miliage`.
-2. Project name `gas-miliage`, production branch `main`.
+   `nwohiovisibility/Gas_Mileage`.
+2. Project name `gas-mileage`, production branch `main`.
    **Build command**: `npm run build`. **Deploy command**: leave the
    default `npx wrangler deploy`. (Cloudflare installs dependencies
    itself, and it ignores a build command written in `wrangler.jsonc`, so

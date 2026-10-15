@@ -1,6 +1,6 @@
 /*
 Filename: App.tsx
-Last Edit Date: 2026-09-25 EST
+Last Edit Date: 2026-10-15 EST
 Purpose: Top-level app shell: lock screen, tab navigation, data loading, and CSV export.
 */
 import { useEffect, useState } from 'react'
@@ -64,7 +64,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1>
-          ⛽ Gas Tracker{' '}
+          ⛽ Gas Mileage{' '}
           {window.APP_VERSION && <span className="app-version">version {window.APP_VERSION}</span>}
         </h1>
         <div className="app-header-actions">
