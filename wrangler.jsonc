@@ -4,6 +4,7 @@
 {
   "name": "gas-mileage",
   "compatibility_date": "2026-10-01",
+  "previews": {},
   // Vite builds into dist/. Workers Builds ignores a "build" command here,
   // so set the dashboard's Build command to `npm run build` (see README.md).
   "assets": {
